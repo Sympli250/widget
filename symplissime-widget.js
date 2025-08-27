@@ -508,6 +508,16 @@
         .symplissime-send.sending .symplissime-send-icon {
             animation: spin 1s linear infinite;
         }
+
+        .symplissime-footer {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .symplissime-footer a { color: var(--primary); }
         
         @keyframes spin {
             to {
@@ -596,6 +606,11 @@
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
         </svg>`
     };
+
+    const I18N = {
+        fr: { minimize: 'Réduire', close: 'Fermer', placeholder: 'Tapez votre message...' },
+        en: { minimize: 'Minimize', close: 'Close', placeholder: 'Type your message...' }
+    };
     
     class SymplissimeWidget {
         constructor(element) {
@@ -608,6 +623,7 @@
             this.isProcessing = false;
             this.sessionId = this.generateSessionId();
             this.unreadCount = 0;
+            this.history = [];
 
             this.init();
         }
@@ -626,7 +642,17 @@
                 quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [],
                 welcomeMessage: element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '',
                 greetingMode: element.dataset.greetingMode || 'bubble_immediate',
-                greetingDelay: parseInt(element.dataset.greetingDelay) || 30
+                greetingDelay: parseInt(element.dataset.greetingDelay) || 30,
+                displayName: element.dataset.displayName || element.dataset.title || 'Symplissime AI',
+                profilePicture: element.dataset.profilePicture || '',
+                bubbleIcon: element.dataset.bubbleIcon !== 'false',
+                bubblePosition: element.dataset.bubblePosition || 'right',
+                sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
+                ownerEmail: element.dataset.ownerEmail || '',
+                footerEnabled: element.dataset.footerEnabled === 'true',
+                footerText: element.dataset.footerText || '',
+                language: element.dataset.language || 'fr',
+                timeZone: element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone
             };
         }
         
@@ -682,7 +708,10 @@
         
         createWidget() {
             this.element.className = 'symplissime-widget-container';
-            
+
+            const texts = I18N[this.config.language] || I18N.fr;
+            const placeholder = texts.placeholder;
+
             this.element.innerHTML = `
                 <button class="symplissime-fab" type="button">
                     <div class="symplissime-fab-icon">${ICONS.chat}</div>
@@ -692,38 +721,39 @@
                 <div class="symplissime-widget">
                     <div class="symplissime-header">
                         <div class="symplissime-header-content">
-                            <div class="symplissime-avatar">S</div>
+                            <div class="symplissime-avatar"></div>
                             <div class="symplissime-header-info">
-                                <h3>${this.config.title}</h3>
+                                <h3>${this.config.displayName}</h3>
                                 <p>${this.config.subtitle}</p>
                             </div>
                         </div>
                         <div class="symplissime-controls">
-                            <button class="symplissime-control-btn minimize-btn" type="button" title="Réduire">
+                            <button class="symplissime-control-btn minimize-btn" type="button" title="${texts.minimize}">
                                 ${ICONS.minimize}
                             </button>
-                            <button class="symplissime-control-btn close-btn" type="button" title="Fermer">
+                            <button class="symplissime-control-btn close-btn" type="button" title="${texts.close}">
                                 ${ICONS.close}
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="symplissime-messages"></div>
-                    
+
                     <div class="symplissime-input-container">
                         <form class="symplissime-input-form">
-                            <textarea class="symplissime-input" 
-                                     placeholder="${this.config.placeholder}" 
-                                     rows="1" 
+                            <textarea class="symplissime-input"
+                                     placeholder="${placeholder}"
+                                     rows="1"
                                      maxlength="1000"></textarea>
                             <button class="symplissime-send" type="submit">
                                 <div class="symplissime-send-icon">${ICONS.send}</div>
                             </button>
                         </form>
                     </div>
+                    ${this.config.footerEnabled ? `<div class="symplissime-footer">${this.config.footerText}</div>` : ''}
                 </div>
             `;
-            
+
             // Références DOM
             this.fab = this.element.querySelector('.symplissime-fab');
             this.widget = this.element.querySelector('.symplissime-widget');
@@ -732,6 +762,29 @@
             this.sendBtn = this.element.querySelector('.symplissime-send');
             this.form = this.element.querySelector('.symplissime-input-form');
             this.badge = this.element.querySelector('.symplissime-fab-badge');
+            this.avatar = this.element.querySelector('.symplissime-avatar');
+            if (this.config.profilePicture) {
+                this.avatar.innerHTML = `<img src="${this.config.profilePicture}" alt="" style="width:32px;height:32px;border-radius:50%;">`;
+            } else {
+                this.avatar.textContent = this.config.displayName.charAt(0).toUpperCase();
+            }
+
+            if (!this.config.bubbleIcon) {
+                const iconEl = this.element.querySelector('.symplissime-fab-icon');
+                if (iconEl) iconEl.style.display = 'none';
+            }
+
+            if (this.config.bubblePosition === 'left') {
+                this.element.style.right = 'auto';
+                this.element.style.left = '24px';
+            }
+
+            if (this.config.footerEnabled) {
+                const footer = this.element.querySelector('.symplissime-footer');
+                if (footer) {
+                    footer.querySelectorAll('a').forEach(a => a.setAttribute('target', '_blank'));
+                }
+            }
 
             this.setupAutoResize();
             this.updateBadge();
@@ -811,6 +864,9 @@
             this.widget.classList.remove('open', 'minimized');
             this.fab.classList.remove('closing');
             this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+            if (this.config.sendHistoryEmail && this.config.ownerEmail) {
+                this.sendHistoryEmail();
+            }
         }
         
         toggleMinimize() {
@@ -860,6 +916,29 @@
                 this.unreadCount++;
                 this.updateBadge();
             }
+
+            const now = new Date();
+            this.history.push({
+                from: isUser ? 'user' : 'assistant',
+                message: isUser ? messageEl.textContent : messageEl.innerHTML.replace(/<br>/g, '\n'),
+                timestamp: now.toISOString()
+            });
+        }
+
+        sendHistoryEmail() {
+            const payload = {
+                email: this.config.ownerEmail,
+                displayName: this.config.displayName,
+                timeZone: this.config.timeZone,
+                session: this.sessionId,
+                url: window.location.href,
+                messages: this.history
+            };
+            fetch(this.config.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error('sendHistoryEmail', err));
         }
         
         addQuickMessages() {
