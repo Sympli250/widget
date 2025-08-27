@@ -352,9 +352,13 @@ $snippet .= '<div class="symplissime-chat-widget" '
           }
       });
 
+      function getQuickRepliesString(data) {
+          return data.getAll('quick_messages[]').map(q => q.trim()).filter(Boolean).join('|');
+      }
+
       function buildSnippet(data) {
           const autoOpen = data.get('auto_open') ? 'true' : 'false';
-          const quick = data.getAll('quick_messages[]').map(q => q.trim()).filter(Boolean).join('|');
+          const quick = getQuickRepliesString(data);
           return '<script src="symplissime-widget.js"><\/script>\n' +
               `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-quick-messages="${quick}"></div>`;
       }
