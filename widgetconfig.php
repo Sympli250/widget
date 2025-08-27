@@ -83,6 +83,8 @@ $defaultConfig = [
         'auto_open' => false,
         'position' => 'bottom-right',
         'theme' => 'symplissime',
+        'accent_color' => '#48bb78',
+        'font_family' => 'default',
         'quick_messages' => ''
     ],
     'greetings' => [
@@ -137,6 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['attributes']['auto_open'] = isset($_POST['auto_open']);
     $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
     $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
+    $config['attributes']['accent_color'] = $_POST['accent_color'] ?? '#48bb78';
+    $config['attributes']['font_family'] = $_POST['font_family'] ?? 'default';
     $config['attributes']['quick_messages'] = $_POST['quick_messages'] ?? '';
     $config['greetings']['welcome_message'] = $_POST['welcome_message'] ?? $defaultConfig['greetings']['welcome_message'];
     $config['greetings']['display_mode'] = $_POST['display_mode'] ?? $defaultConfig['greetings']['display_mode'];
@@ -168,6 +172,8 @@ $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
     . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
     . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '" '
+    . 'data-accent-color="' . htmlspecialchars($config['attributes']['accent_color']) . '" '
+    . 'data-font="' . htmlspecialchars($config['attributes']['font_family']) . '" '
     . 'data-display-name="' . htmlspecialchars($config['general']['display_name']) . '" '
     . 'data-profile-picture="' . htmlspecialchars($config['general']['profile_picture']) . '" '
     . 'data-bubble-icon="' . ($config['general']['bubble_icon'] ? 'true' : 'false') . '" '
@@ -258,6 +264,52 @@ $snippet .= '<div class="symplissime-chat-widget" '
             padding: 20px;
             position: relative;
         }
+
+        .preset-gallery {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .preset-thumb {
+            width: 80px;
+            height: 60px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+        .preset-thumb.selected {
+            border-color: #3182ce;
+        }
+        .accent-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .accent-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .accent-color.selected {
+            border-color: #3182ce;
+        }
+        .contrast-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -314,23 +366,36 @@ $snippet .= '<div class="symplissime-chat-widget" '
     </div>
 
     <div id="themes" class="tabcontent">
-        <?php foreach ($themes as $key => $theme): ?>
-            <fieldset>
-                <legend><?php echo htmlspecialchars($theme['name']); ?></legend>
-                <div class="theme-inputs">
-                <?php foreach ($theme as $prop => $val): if ($prop === 'name') continue; ?>
-                    <label>
-                        <span><?php echo $prop; ?></span>
-                        <?php if (strpos($val, '#') === 0): ?>
-                            <input type="color" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
-                        <?php else: ?>
-                            <input type="text" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
-                        <?php endif; ?>
-                    </label>
-                <?php endforeach; ?>
+        <input type="hidden" name="theme" id="themeInput" value="<?php echo htmlspecialchars($config['attributes']['theme']); ?>">
+        <h3>Presets</h3>
+        <div class="preset-gallery" id="presetGallery">
+            <?php foreach ($themes as $key => $t): ?>
+                <div class="preset-thumb" data-theme="<?php echo $key; ?>" style="background: <?php echo htmlspecialchars($t['background']); ?>; color: <?php echo htmlspecialchars($t['text']); ?>;">
+                    <?php echo htmlspecialchars($t['name']); ?>
                 </div>
-            </fieldset>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
+
+        <h3>Accent Color</h3>
+        <div class="accent-palette" id="accentPalette">
+            <?php $palette = ['#4f46e5','#4338ca','#10b981','#ef4444','#f59e0b','#3b82f6','#ec4899','#8b5cf6','#6366f1','#14b8a6','#0ea5e9','#f97316'];
+            foreach ($palette as $color): ?>
+                <button type="button" class="accent-color" data-color="<?php echo $color; ?>" style="background: <?php echo $color; ?>;"></button>
+            <?php endforeach; ?>
+            <input type="color" id="accentInput" name="accent_color" value="<?php echo htmlspecialchars($config['attributes']['accent_color']); ?>">
+        </div>
+        <div id="contrastWarning" class="contrast-warning" style="display:none"></div>
+
+        <h3>Police</h3>
+        <select name="font_family" id="fontSelect">
+            <option value="default" <?php echo $config['attributes']['font_family'] === 'default' ? 'selected' : ''; ?>>Default</option>
+            <option value="sans-serif" <?php echo $config['attributes']['font_family'] === 'sans-serif' ? 'selected' : ''; ?>>Sans-serif moderne</option>
+            <option value="serif" <?php echo $config['attributes']['font_family'] === 'serif' ? 'selected' : ''; ?>>Serif</option>
+            <option value="monospace" <?php echo $config['attributes']['font_family'] === 'monospace' ? 'selected' : ''; ?>>Monospace</option>
+        </select>
+
+        <br><br>
+        <button type="button" id="resetTheme">Réinitialiser le thème</button>
     </div>
 
     <div id="attributes" class="tabcontent">
@@ -351,13 +416,6 @@ $snippet .= '<div class="symplissime-chat-widget" '
                 <?php $positions = ['bottom-right', 'bottom-left', 'top-right', 'top-left']; ?>
                 <?php foreach ($positions as $pos): ?>
                     <option value="<?php echo $pos; ?>" <?php echo $config['attributes']['position'] === $pos ? 'selected' : ''; ?>><?php echo $pos; ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label><br><br>
-        <label>Thème:
-            <select name="theme">
-                <?php foreach ($themes as $key => $t): ?>
-                    <option value="<?php echo $key; ?>" <?php echo $config['attributes']['theme'] === $key ? 'selected' : ''; ?>><?php echo htmlspecialchars($t['name']); ?></option>
                 <?php endforeach; ?>
             </select>
         </label>
@@ -402,6 +460,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
 
 <script src="symplissime-widget.js"></script>
 <script>
+    const THEMES = <?php echo json_encode($themes, JSON_UNESCAPED_UNICODE); ?>;
     const tabs = document.querySelectorAll('.tablink');
     const contents = document.querySelectorAll('.tabcontent');
     tabs.forEach(btn => {
@@ -417,13 +476,20 @@ $snippet .= '<div class="symplissime-chat-widget" '
     });
 
     const form = document.getElementById('configForm');
+    const themeInput = document.getElementById('themeInput');
+    const presetGallery = document.getElementById('presetGallery');
+    const accentInput = document.getElementById('accentInput');
+    const accentPalette = document.getElementById('accentPalette');
+    const contrastWarning = document.getElementById('contrastWarning');
+    const fontSelect = document.getElementById('fontSelect');
+    const resetBtn = document.getElementById('resetTheme');
 
     function buildSnippet(data) {
         const autoOpen = data.get('auto_open') ? 'true' : 'false';
         const welcome = data.get('welcome_message').replace(/\n/g, '&#10;').replace(/"/g, '&quot;');
         const quick = data.get('quick_messages').split('\n').map(m => m.trim()).filter(Boolean).join('|').replace(/"/g, '&quot;');
         return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-quick-messages="${quick}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-display-name="${data.get('display_name')}" data-profile-picture="${data.get('profile_picture')}" data-bubble-icon="${data.get('bubble_icon') ? 'true' : 'false'}" data-bubble-position="${data.get('bubble_position')}" data-send-history-email="${data.get('send_history_email') ? 'true' : 'false'}" data-owner-email="${data.get('owner_email')}" data-footer-enabled="${data.get('footer_enabled') ? 'true' : 'false'}" data-footer-text="${data.get('footer_text')}" data-language="${data.get('language')}" data-time-zone="${data.get('time_zone')}"></div>`;
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-quick-messages="${quick}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-accent-color="${data.get('accent_color')}" data-font="${data.get('font_family')}" data-display-name="${data.get('display_name')}" data-profile-picture="${data.get('profile_picture')}" data-bubble-icon="${data.get('bubble_icon') ? 'true' : 'false'}" data-bubble-position="${data.get('bubble_position')}" data-send-history-email="${data.get('send_history_email') ? 'true' : 'false'}" data-owner-email="${data.get('owner_email')}" data-footer-enabled="${data.get('footer_enabled') ? 'true' : 'false'}" data-footer-text="${data.get('footer_text')}" data-language="${data.get('language')}" data-time-zone="${data.get('time_zone')}"></div>`;
     }
 
     function updateSnippet() {
@@ -447,6 +513,8 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
         widget.dataset.theme = data.get('theme');
+        widget.dataset.accentColor = data.get('accent_color');
+        widget.dataset.font = data.get('font_family');
         widget.dataset.displayName = data.get('display_name');
         widget.dataset.profilePicture = data.get('profile_picture');
         widget.dataset.bubbleIcon = data.get('bubble_icon') ? 'true' : 'false';
@@ -467,6 +535,128 @@ $snippet .= '<div class="symplissime-chat-widget" '
 
     form.addEventListener('input', updateAll);
     updateAll();
+
+    function hexToRgb(hex) {
+        const bigint = parseInt(hex.slice(1), 16);
+        return {
+            r: (bigint >> 16) & 255,
+            g: (bigint >> 8) & 255,
+            b: bigint & 255
+        };
+    }
+
+    function luminance(r, g, b) {
+        const a = [r, g, b].map(v => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function contrast(c1, c2) {
+        const L1 = luminance(...Object.values(hexToRgb(c1)));
+        const L2 = luminance(...Object.values(hexToRgb(c2)));
+        return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+    }
+
+    function shade(color, percent) {
+        let f = parseInt(color.slice(1), 16),
+            t = percent < 0 ? 0 : 255,
+            p = Math.abs(percent) / 100,
+            R = f >> 16,
+            G = f >> 8 & 0x00FF,
+            B = f & 0x0000FF;
+        return '#' + (
+            0x1000000 +
+            (Math.round((t - R) * p) + R) * 0x10000 +
+            (Math.round((t - G) * p) + G) * 0x100 +
+            (Math.round((t - B) * p) + B)
+        ).toString(16).slice(1);
+    }
+
+    function adjustColor(color, bg) {
+        let ratio = contrast(color, bg);
+        let adjusted = color;
+        const lightBg = luminance(...Object.values(hexToRgb(bg))) > 0.5;
+        while (ratio < 4.5) {
+            adjusted = shade(adjusted, lightBg ? -10 : 10);
+            ratio = contrast(adjusted, bg);
+        }
+        return adjusted;
+    }
+
+    function checkContrast() {
+        const theme = themeInput.value;
+        const accent = accentInput.value;
+        const bg = THEMES[theme] ? THEMES[theme].background : '#ffffff';
+        const ratio = contrast(accent, bg);
+        if (ratio < 4.5) {
+            const suggestion = adjustColor(accent, bg);
+            contrastWarning.innerHTML = `Contraste insuffisant (${ratio.toFixed(2)}). <button type="button" id="applyAdjust">Ajuster</button> <button type="button" id="keepAccent">Conserver</button>`;
+            contrastWarning.style.display = 'block';
+            document.getElementById('applyAdjust').onclick = () => {
+                accentInput.value = suggestion;
+                updateAll();
+                checkContrast();
+            };
+            document.getElementById('keepAccent').onclick = () => {
+                contrastWarning.style.display = 'none';
+            };
+        } else {
+            contrastWarning.style.display = 'none';
+        }
+    }
+
+    function selectAccent(color) {
+        accentPalette.querySelectorAll('.accent-color').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.color.toLowerCase() === color.toLowerCase());
+        });
+    }
+
+    presetGallery.querySelectorAll('.preset-thumb').forEach(el => {
+        el.addEventListener('click', () => {
+            presetGallery.querySelectorAll('.preset-thumb').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            themeInput.value = el.dataset.theme;
+            const primary = THEMES[el.dataset.theme].primary;
+            accentInput.value = primary;
+            selectAccent(primary);
+            updateAll();
+            checkContrast();
+        });
+    });
+
+    accentPalette.querySelectorAll('.accent-color').forEach(btn => {
+        btn.addEventListener('click', () => {
+            accentInput.value = btn.dataset.color;
+            selectAccent(btn.dataset.color);
+            updateAll();
+            checkContrast();
+        });
+    });
+
+    accentInput.addEventListener('input', () => {
+        selectAccent(accentInput.value);
+        updateAll();
+        checkContrast();
+    });
+
+    resetBtn.addEventListener('click', () => {
+        themeInput.value = 'symplissime';
+        accentInput.value = THEMES.symplissime.primary;
+        fontSelect.value = 'default';
+        presetGallery.querySelectorAll('.preset-thumb').forEach(p => p.classList.toggle('selected', p.dataset.theme === 'symplissime'));
+        selectAccent(accentInput.value);
+        updateAll();
+        checkContrast();
+    });
+
+    // initialize selections
+    presetGallery.querySelectorAll('.preset-thumb').forEach(p => {
+        if (p.dataset.theme === themeInput.value) p.classList.add('selected');
+    });
+    selectAccent(accentInput.value);
+    checkContrast();
 
     document.getElementById('copySnippet').addEventListener('click', () => {
         const text = document.getElementById('snippet').value;
