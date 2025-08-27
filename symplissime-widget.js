@@ -31,20 +31,66 @@
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
     let THEMES = {};
+    const DEFAULT_THEMES = {
+        symplissime: {
+            name: 'Symplissime Classic',
+            primary: '#48bb78',
+            primaryHover: '#38a169',
+            primaryLight: '#c6f6d5',
+            primaryDark: '#2f855a',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
+        }
+    };
+
     const scriptSrc = document.currentScript ? document.currentScript.src : null;
     const themesUrl = scriptSrc ? new URL('widget-themes.json', scriptSrc) : 'widget-themes.json';
-    const themesLoaded = fetch(themesUrl)
-        .then(response => {
+
+    async function loadThemes() {
+        const CACHE_KEY = 'symplissime_widget_themes_v1';
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                // 24h de cache
+                if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+                    THEMES = parsed.data;
+                    return THEMES;
+                }
+            }
+        } catch (e) {
+            // localStorage peut échouer (mode privé, etc.)
+            console.warn('Cache themes inaccessible:', e);
+        }
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+            const response = await fetch(themesUrl, { signal: controller.signal });
             if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(data => {
+            const data = await response.json();
             THEMES = data;
-        })
-        .catch(err => {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+            } catch (e) {
+                /* ignore cache errors */
+            }
+        } catch (err) {
             console.error('Erreur de chargement des thèmes:', err);
-            THEMES = {};
-        });
+            // fallback vers le thème par défaut
+            THEMES = DEFAULT_THEMES;
+        } finally {
+            clearTimeout(timeout);
+        }
+        return THEMES;
+    }
+
+    const themesLoaded = loadThemes();
     
     // CSS de base avec variables CSS pour les thèmes
     const CSS_BASE = `
@@ -638,15 +684,15 @@
             this.element = element;
             this.config = this.getConfig(element);
             this.theme = this.config.theme || 'symplissime';
-            
+
             this.isOpen = false;
             this.isMinimized = false;
             this.isProcessing = false;
-            this.sessionId = this.generateSessionId();
+            this.sessionId = null; // sera fourni par le serveur
             this.unreadCount = 0;
             this.history = [];
 
-            this.init();
+            themesLoaded.then(() => this.init());
         }
         
         getConfig(element) {
@@ -677,10 +723,6 @@
                 language: element.dataset.language || 'fr',
                 timeZone: element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone
             };
-        }
-        
-        generateSessionId() {
-            return 'widget_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
         
         init() {
@@ -755,7 +797,7 @@
             const placeholder = texts.placeholder;
 
             this.element.innerHTML = `
-                <button class="symplissime-fab" type="button">
+                <button class="symplissime-fab" type="button" aria-label="Ouvrir la conversation" aria-haspopup="dialog">
                     <div class="symplissime-fab-icon">${ICONS.chat}</div>
                     <div class="symplissime-fab-badge"></div>
                 </button>
@@ -770,10 +812,10 @@
                             </div>
                         </div>
                         <div class="symplissime-controls">
-                            <button class="symplissime-control-btn minimize-btn" type="button" title="${texts.minimize}">
+                            <button class="symplissime-control-btn minimize-btn" type="button" title="${texts.minimize}" aria-label="${texts.minimize}">
                                 ${ICONS.minimize}
                             </button>
-                            <button class="symplissime-control-btn close-btn" type="button" title="${texts.close}">
+                            <button class="symplissime-control-btn close-btn" type="button" title="${texts.close}" aria-label="${texts.close}">
                                 ${ICONS.close}
                             </button>
                         </div>
@@ -850,6 +892,12 @@
             this.element.querySelector('.close-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.closeWidget();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    this.closeWidget();
+                }
             });
             
             this.element.querySelector('.symplissime-header').addEventListener('click', (e) => {
@@ -1053,18 +1101,27 @@
                 formData.append('action', 'chat');
                 formData.append('message', message);
                 formData.append('workspace', this.config.workspace);
-                formData.append('sessionId', this.sessionId);
-                
+                if (this.sessionId) {
+                    formData.append('sessionId', this.sessionId);
+                }
+
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
                 const response = await fetch(this.config.apiEndpoint, {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    signal: controller.signal
                 });
-                
+                clearTimeout(timeout);
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
+                if (data.sessionId) {
+                    this.sessionId = data.sessionId;
+                }
                 this.hideTyping();
                 
                 if (data.error) {
@@ -1142,10 +1199,14 @@
     }
     
     if (typeof MutationObserver !== 'undefined') {
-        const observer = new MutationObserver(initializeWidgets);
-        observer.observe(document.body, { 
-            childList: true, 
-            subtree: true 
+        let observerTimeout;
+        const observer = new MutationObserver(() => {
+            clearTimeout(observerTimeout);
+            observerTimeout = setTimeout(initializeWidgets, 100);
+        });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
         });
     }
     

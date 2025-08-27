@@ -50,10 +50,13 @@ function handleChatRequest() {
     }
     
     // Session ID pour maintenir le contexte
+    if (isset($_POST['sessionId']) && $_POST['sessionId'] !== '') {
+        // Nettoyage basique de l'ID fourni
+        $_SESSION['widget_session_id'] = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['sessionId']);
+    }
     if (!isset($_SESSION['widget_session_id'])) {
         $_SESSION['widget_session_id'] = uniqid('widget_', true);
     }
-    
     $sessionId = $_SESSION['widget_session_id'];
     
     // Préparer la requête vers l'API Symplissime
