@@ -230,7 +230,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
     function updateSnippet() {
         const data = new FormData(form);
         const autoOpen = data.get('auto_open') ? 'true' : 'false';
-        const snippet = `<script src="symplissime-widget.js"></script>\n` +
+        const snippet = '<script src="symplissime-widget.js"><\/script>\n' +
             `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
         document.getElementById('snippet').value = snippet;
     }
