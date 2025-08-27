@@ -982,14 +982,35 @@
         }
         
         bindEvents() {
+            const addKeyboard = (btn, handler) => {
+                btn.setAttribute('tabindex', '0');
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handler(e);
+                    }
+                });
+            };
+
             this.fab.addEventListener('click', () => this.toggleWidget());
-            
-            this.element.querySelector('.minimize-btn').addEventListener('click', (e) => {
+            addKeyboard(this.fab, () => this.toggleWidget());
+
+            const minimizeBtn = this.element.querySelector('.minimize-btn');
+            minimizeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleMinimize();
             });
-            
-            this.element.querySelector('.close-btn').addEventListener('click', (e) => {
+            addKeyboard(minimizeBtn, (e) => {
+                e.stopPropagation();
+                this.toggleMinimize();
+            });
+
+            const closeBtn = this.element.querySelector('.close-btn');
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeWidget();
+            });
+            addKeyboard(closeBtn, (e) => {
                 e.stopPropagation();
                 this.closeWidget();
             });
@@ -1000,15 +1021,27 @@
                 }
             });
             
-            this.element.querySelector('.symplissime-header').addEventListener('click', (e) => {
+            const header = this.element.querySelector('.symplissime-header');
+            header.setAttribute('tabindex', '0');
+            header.addEventListener('click', (e) => {
                 if (e.target.closest('.symplissime-controls')) return;
                 this.toggleMinimize();
+            });
+            header.addEventListener('keydown', (e) => {
+                if (e.target.closest('.symplissime-controls')) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.toggleMinimize();
+                }
             });
             
             this.form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.sendMessage();
             });
+
+            const sendBtn = this.element.querySelector('.symplissime-send');
+            addKeyboard(sendBtn, () => this.form.dispatchEvent(new Event('submit', { cancelable: true })));
             
             this.input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -1137,22 +1170,38 @@
 
             const quickContainer = document.createElement('div');
             quickContainer.className = 'symplissime-quick-messages';
-            
+
             this.config.quickMessages.forEach(message => {
                 const btn = document.createElement('button');
                 btn.className = 'symplissime-quick-message';
+                btn.type = 'button';
+                btn.setAttribute('tabindex', '0');
                 btn.textContent = message;
 
                 const container = quickContainer;
-                btn.addEventListener('click', () => {
+                const send = () => {
                     this.input.value = message;
                     this.sendMessage();
                     container.remove();
+                };
+
+                btn.addEventListener('click', send);
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        send();
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        (btn.nextElementSibling || quickContainer.firstElementChild).focus();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        (btn.previousElementSibling || quickContainer.lastElementChild).focus();
+                    }
                 });
 
                 quickContainer.appendChild(btn);
             });
-            
+
             this.messages.appendChild(quickContainer);
             this.scrollToBottom();
         }
