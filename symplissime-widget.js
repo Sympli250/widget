@@ -617,17 +617,20 @@
             }
         }
         
-        applyTheme() {
-            const themeConfig = THEMES[this.theme] || THEMES.symplissime || {};
+        loadTheme(name) {
+            const themeConfig = THEMES[name] || THEMES.symplissime || {};
             const container = this.element;
-            
-            // Appliquer les variables CSS du thème
+
             Object.entries(themeConfig).forEach(([key, value]) => {
                 if (key !== 'name') {
                     const cssVar = key.replace(/([A-Z])/g, '-$1').toLowerCase();
                     container.style.setProperty(`--${cssVar}`, value);
                 }
             });
+        }
+
+        applyTheme() {
+            this.loadTheme(this.theme);
         }
         
         createWidget() {

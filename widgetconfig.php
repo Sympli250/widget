@@ -80,7 +80,8 @@ $defaultConfig = [
         'workspace' => '',
         'title' => '',
         'auto_open' => false,
-        'position' => 'bottom-right'
+        'position' => 'bottom-right',
+        'theme' => 'symplissime'
     ]
 ];
 
@@ -115,15 +116,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['attributes']['title'] = $_POST['title'] ?? '';
     $config['attributes']['auto_open'] = isset($_POST['auto_open']);
     $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
+    $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
-
-$snippet = '<script src="symplissime-widget.js" '
+$snippet = '<script src="symplissime-widget.js"></script>' . "\n";
+$snippet .= '<div class="symplissime-chat-widget" '
     . 'data-workspace="' . htmlspecialchars($config['attributes']['workspace']) . '" '
     . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
-    . 'data-auto-open="' . ($config['attributes']['auto_open'] ? '1' : '0') . '" '
-    . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '"></' . 'script>';
+    . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
+    . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
+    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '"></div>';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -185,6 +188,13 @@ $snippet = '<script src="symplissime-widget.js" '
                     <option value="<?php echo $pos; ?>" <?php echo $config['attributes']['position'] === $pos ? 'selected' : ''; ?>><?php echo $pos; ?></option>
                 <?php endforeach; ?>
             </select>
+        </label><br><br>
+        <label>Thème:
+            <select name="theme">
+                <?php foreach ($themes as $key => $t): ?>
+                    <option value="<?php echo $key; ?>" <?php echo $config['attributes']['theme'] === $key ? 'selected' : ''; ?>><?php echo htmlspecialchars($t['name']); ?></option>
+                <?php endforeach; ?>
+            </select>
         </label>
     </div>
 
@@ -212,8 +222,9 @@ $snippet = '<script src="symplissime-widget.js" '
     const form = document.getElementById('configForm');
     function updateSnippet() {
         const data = new FormData(form);
-        const autoOpen = data.get('auto_open') ? '1' : '0';
-        const snippet = `<script src="symplissime-widget.js" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}"></` + 'script>';
+        const autoOpen = data.get('auto_open') ? 'true' : 'false';
+        const snippet = `<script src="symplissime-widget.js"></script>\n` +
+            `<div class="symplissime-chat-widget" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
         document.getElementById('snippet').value = snippet;
     }
     form.addEventListener('input', updateSnippet);
