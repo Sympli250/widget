@@ -219,9 +219,16 @@ $snippet = renderSnippet($config);
             padding: 0 5px;
         }
         .theme-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 10px;
+        }
+
+        @supports (display: grid) {
+            .theme-inputs {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
         }
         .theme-inputs label {
             display: flex;
@@ -462,7 +469,7 @@ $snippet = renderSnippet($config);
 
       function updateSnippet() {
         const data = new FormData(form);
-        fetch("generate_snippet.php", { method: "POST", body: data })
+        SymplissimeWidget.fetch("generate_snippet.php", { method: "POST", body: data })
             .then(r => r.text())
             .then(text => { document.getElementById("snippet").value = text; });
       }
