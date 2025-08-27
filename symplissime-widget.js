@@ -802,6 +802,10 @@
             this.isOpen = false;
             this.isMinimized = false;
             this.isProcessing = false;
+            this.state = 'closed';
+            this.stateLock = false;
+            this.pendingState = null;
+            this.stateTimeout = null;
             this.sessionId = null; // sera fourni par le serveur
             this.unreadCount = 0;
             this.history = [];
@@ -1075,54 +1079,96 @@
                 this.openWidget();
             }
         }
-        
+
+        changeState(newState) {
+            const transitions = {
+                closed: ['open'],
+                open: ['closed', 'minimized'],
+                minimized: ['open', 'closed']
+            };
+
+            if (this.stateLock) {
+                this.pendingState = newState;
+                return;
+            }
+            if (!transitions[this.state].includes(newState)) return;
+
+            this.stateLock = true;
+            clearTimeout(this.stateTimeout);
+
+            const releaseLock = () => {
+                this.stateLock = false;
+                if (this.pendingState) {
+                    const next = this.pendingState;
+                    this.pendingState = null;
+                    this.changeState(next);
+                }
+            };
+
+            // Safety timeout to avoid stuck states
+            this.stateTimeout = setTimeout(() => {
+                if (this.stateLock) {
+                    releaseLock();
+                    if (this.state !== 'closed') {
+                        this.changeState('closed');
+                    }
+                }
+            }, 2000);
+
+            this.state = newState;
+            this.isOpen = newState !== 'closed';
+            this.isMinimized = newState === 'minimized';
+
+            switch (newState) {
+                case 'open':
+                    this.fab.setAttribute('aria-expanded', 'true');
+                    this.unreadCount = 0;
+                    this.updateBadge();
+                    this.widget.classList.add('open');
+                    this.widget.classList.remove('minimized');
+                    this.fab.classList.add('closing');
+                    this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
+                    if (this.greetingBubble) {
+                        this.greetingBubble.remove();
+                        this.greetingBubble = null;
+                    }
+                    if (!this.welcomeShown) {
+                        this.showWelcomeMessage();
+                    }
+                    setTimeout(() => this.input.focus(), 300);
+                    break;
+                case 'closed':
+                    this.widget.classList.remove('open', 'minimized');
+                    this.fab.classList.remove('closing');
+                    this.fab.setAttribute('aria-expanded', 'false');
+                    this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+                    if (this.config.sendHistoryEmail && this.config.ownerEmail) {
+                        this.sendHistoryEmail();
+                    }
+                    break;
+                case 'minimized':
+                    this.widget.classList.add('open');
+                    this.widget.classList.add('minimized');
+                    setTimeout(() => this.input.focus(), 100);
+                    this.unreadCount = 0;
+                    this.updateBadge();
+                    break;
+            }
+
+            setTimeout(releaseLock, 300);
+        }
+
         openWidget() {
-            this.isOpen = true;
-            this.fab.setAttribute('aria-expanded', 'true');
-            this.unreadCount = 0;
-            this.updateBadge();
-            this.widget.classList.add('open');
-            this.fab.classList.add('closing');
-            this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
-
-            if (this.greetingBubble) {
-                this.greetingBubble.remove();
-                this.greetingBubble = null;
-            }
-
-            if (!this.welcomeShown) {
-                this.showWelcomeMessage();
-            }
-
-            setTimeout(() => {
-                this.input.focus();
-            }, 300);
+            this.changeState('open');
         }
-        
+
         closeWidget() {
-            this.isOpen = false;
-            this.isMinimized = false;
-            this.widget.classList.remove('open', 'minimized');
-            this.fab.classList.remove('closing');
-            this.fab.setAttribute('aria-expanded', 'false');
-            this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
-            if (this.config.sendHistoryEmail && this.config.ownerEmail) {
-                this.sendHistoryEmail();
-            }
+            this.changeState('closed');
         }
-        
+
         toggleMinimize() {
             if (!this.isOpen) return;
-
-            this.isMinimized = !this.isMinimized;
-            this.widget.classList.toggle('minimized', this.isMinimized);
-
-            if (!this.isMinimized) {
-                setTimeout(() => this.input.focus(), 100);
-            }
-
-            this.unreadCount = 0;
-            this.updateBadge();
+            this.changeState(this.isMinimized ? 'open' : 'minimized');
         }
 
         updateBadge() {
