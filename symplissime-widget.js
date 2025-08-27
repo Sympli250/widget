@@ -104,6 +104,21 @@
         }
     };
 
+    const MINIMAL_THEME = {
+        name: 'Minimal Gray',
+        primary: '#a0aec0',
+        primaryHover: '#718096',
+        primaryLight: '#f7fafc',
+        primaryDark: '#4a5568',
+        success: '#48bb78',
+        background: '#ffffff',
+        backgroundSecondary: '#f7fafc',
+        text: '#1a202c',
+        textSecondary: '#718096',
+        border: '#e2e8f0',
+        shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
+    };
+
     const scriptSrc = document.currentScript ? document.currentScript.src : null;
     const themesUrl = scriptSrc ? new URL('widget-themes.json', scriptSrc) : 'widget-themes.json';
 
@@ -112,9 +127,20 @@
         try {
             const cached = localStorage.getItem(CACHE_KEY);
             if (cached) {
-                const parsed = JSON.parse(cached);
-                // 24h de cache
-                if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+                let parsed;
+                try {
+                    parsed = JSON.parse(cached);
+                } catch (parseErr) {
+                    console.warn('Cache themes corrompu, suppression:', parseErr);
+                    localStorage.removeItem(CACHE_KEY);
+                }
+                if (
+                    parsed &&
+                    typeof parsed.timestamp === 'number' &&
+                    parsed.data &&
+                    typeof parsed.data === 'object' &&
+                    Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000
+                ) {
                     THEMES = parsed.data;
                     return THEMES;
                 }
@@ -130,16 +156,33 @@
             const response = await fetch(themesUrl, { signal: controller.signal });
             if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
-            THEMES = data;
+            if (data && typeof data === 'object') {
+                THEMES = data;
+                try {
+                    localStorage.setItem(
+                        CACHE_KEY,
+                        JSON.stringify({ data, timestamp: Date.now() })
+                    );
+                } catch (e) {
+                    /* ignore cache errors */
+                }
+                return THEMES;
+            }
+            throw new Error('Données de thèmes invalides');
+        } catch (err) {
+            console.error('Erreur de chargement des thèmes:', err);
+            THEMES = { ...DEFAULT_THEMES };
             try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+                localStorage.setItem(
+                    CACHE_KEY,
+                    JSON.stringify({ data: THEMES, timestamp: Date.now() })
+                );
             } catch (e) {
                 /* ignore cache errors */
             }
-        } catch (err) {
-            console.error('Erreur de chargement des thèmes:', err);
-            // fallback vers les thèmes embarqués
-            THEMES = { ...DEFAULT_THEMES };
+            if (!THEMES || Object.keys(THEMES).length === 0) {
+                THEMES = { minimal: MINIMAL_THEME };
+            }
         } finally {
             clearTimeout(timeout);
         }
