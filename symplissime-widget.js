@@ -949,6 +949,32 @@
         }
     }
 
+    class StateMachine {
+        constructor(initialState, transitions) {
+            this.state = initialState;
+            this.transitions = transitions;
+            this.transitioning = false;
+        }
+
+        can(target) {
+            return this.transitions[this.state]?.includes(target);
+        }
+
+        transition(target, fn) {
+            if (this.transitioning || !this.can(target)) return false;
+            this.transitioning = true;
+            fn();
+            this.state = target;
+            setTimeout(() => { this.transitioning = false; }, 300);
+            return true;
+        }
+
+        force(target) {
+            this.state = target;
+            this.transitioning = false;
+        }
+    }
+
     class WidgetUI {
         constructor(element, config, api) {
             this.element = element;
@@ -960,8 +986,11 @@
             this.isMinimized = false;
             this.isProcessing = false;
             this.state = 'closed';
-            this.stateLock = false;
-            this.pendingState = null;
+            this.stateMachine = new StateMachine('closed', {
+                closed: ['open'],
+                open: ['closed', 'minimized'],
+                minimized: ['open', 'closed']
+            });
             this.stateTimeout = null;
             try {
                 this.sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -1231,75 +1260,53 @@
             clearTimeout(this.stateTimeout);
             this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
 
-            const transitions = {
-                closed: ['open'],
-                open: ['closed', 'minimized'],
-                minimized: ['open', 'closed']
-            };
+            const transitioned = this.stateMachine.transition(newState, () => {
+                this.state = newState;
+                this.isOpen = newState !== 'closed';
+                this.isMinimized = newState === 'minimized';
 
-            if (this.stateLock) {
-                this.pendingState = newState;
-                return;
-            }
-            if (!transitions[this.state].includes(newState)) return;
-
-            this.stateLock = true;
-
-            const releaseLock = () => {
-                this.stateLock = false;
-                if (this.pendingState) {
-                    const next = this.pendingState;
-                    this.pendingState = null;
-                    this.changeState(next);
+                switch (newState) {
+                    case 'open':
+                        this.fab.setAttribute('aria-expanded', 'true');
+                        this.unreadCount = 0;
+                        this.updateBadge();
+                        this.widget.classList.add('open');
+                        this.widget.classList.remove('minimized');
+                        this.fab.classList.add('closing');
+                        this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
+                        if (this.greetingBubble) {
+                            this.greetingBubble.remove();
+                            this.greetingBubble = null;
+                        }
+                        if (!this.welcomeShown) {
+                            this.showWelcomeMessage();
+                        }
+                        setTimeout(() => this.input.focus(), 300);
+                        break;
+                    case 'closed':
+                        this.widget.classList.remove('open', 'minimized');
+                        this.fab.classList.remove('closing');
+                        this.fab.setAttribute('aria-expanded', 'false');
+                        this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+                        if (this.config.sendHistoryEmail && this.config.ownerEmail) {
+                            this.sendHistoryEmail();
+                        }
+                        break;
+                    case 'minimized':
+                        this.widget.classList.add('open');
+                        this.widget.classList.add('minimized');
+                        setTimeout(() => this.input.focus(), 100);
+                        this.unreadCount = 0;
+                        this.updateBadge();
+                        break;
                 }
-            };
+            });
 
-            this.state = newState;
-            this.isOpen = newState !== 'closed';
-            this.isMinimized = newState === 'minimized';
-
-            switch (newState) {
-                case 'open':
-                    this.fab.setAttribute('aria-expanded', 'true');
-                    this.unreadCount = 0;
-                    this.updateBadge();
-                    this.widget.classList.add('open');
-                    this.widget.classList.remove('minimized');
-                    this.fab.classList.add('closing');
-                    this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
-                    if (this.greetingBubble) {
-                        this.greetingBubble.remove();
-                        this.greetingBubble = null;
-                    }
-                    if (!this.welcomeShown) {
-                        this.showWelcomeMessage();
-                    }
-                    setTimeout(() => this.input.focus(), 300);
-                    break;
-                case 'closed':
-                    this.widget.classList.remove('open', 'minimized');
-                    this.fab.classList.remove('closing');
-                    this.fab.setAttribute('aria-expanded', 'false');
-                    this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
-                    if (this.config.sendHistoryEmail && this.config.ownerEmail) {
-                        this.sendHistoryEmail();
-                    }
-                    break;
-                case 'minimized':
-                    this.widget.classList.add('open');
-                    this.widget.classList.add('minimized');
-                    setTimeout(() => this.input.focus(), 100);
-                    this.unreadCount = 0;
-                    this.updateBadge();
-                    break;
-            }
-
-            setTimeout(releaseLock, 300);
+            if (!transitioned) return;
         }
 
         forceState(newState) {
-            this.stateLock = false;
-            this.pendingState = null;
+            this.stateMachine.force(newState);
             this.state = newState;
             this.isOpen = newState !== 'closed';
             this.isMinimized = newState === 'minimized';
