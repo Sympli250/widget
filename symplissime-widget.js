@@ -5,8 +5,11 @@
  *        <div class="symplissime-chat-widget" data-theme="symplissime"></div>
  */
 
-(function() {
+(function(global) {
     'use strict';
+
+    const SymplissimeWidgetNS = {};
+    const widgetInstances = new WeakMap();
 
     function decodeHTML(str) {
         const txt = document.createElement('textarea');
@@ -903,7 +906,7 @@
         }
         
         createWidget() {
-            this.element.className = 'symplissime-widget-container';
+            this.element.classList.add('symplissime-widget-container');
 
             const texts = I18N[this.config.language] || I18N.fr;
             const placeholder = texts.placeholder;
@@ -1349,17 +1352,18 @@
     // Auto-initialization
     async function initializeWidgets() {
         await themesLoaded;
-        const widgets = document.querySelectorAll('.symplissime-chat-widget:not([data-widget-initialized])');
+        const widgets = document.querySelectorAll('.symplissime-chat-widget');
 
         widgets.forEach(element => {
-            element.setAttribute('data-widget-initialized', 'true');
-            new SymplissimeWidget(element);
+            if (widgetInstances.has(element)) return;
+            const instance = new SymplissimeWidget(element);
+            widgetInstances.set(element, instance);
             observeContainer(element.parentElement);
         });
     }
 
     let observer;
-    const observedContainers = new Set();
+    const observedContainers = new WeakSet();
     let debouncePending = false;
 
     function observeContainer(container) {
@@ -1370,7 +1374,7 @@
 
     function handleMutations(mutations) {
         const external = mutations.some(
-            m => !m.target.closest('.symplissime-chat-widget[data-widget-initialized]')
+            m => !m.target.closest('.symplissime-chat-widget')
         );
         if (!external || debouncePending) return;
         debouncePending = true;
@@ -1393,6 +1397,10 @@
         setTimeout(initializeWidgets, 0);
     }
 
-    window.SymplissimeWidget = SymplissimeWidget;
+    SymplissimeWidgetNS.init = initializeWidgets;
+    SymplissimeWidgetNS.getInstance = element => widgetInstances.get(element);
+    SymplissimeWidgetNS.Widget = SymplissimeWidget;
 
-})();
+    global.SymplissimeWidget = SymplissimeWidgetNS;
+
+})(window);
