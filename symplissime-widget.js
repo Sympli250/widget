@@ -1570,14 +1570,18 @@
             if (widgetInstances.has(element)) return;
             const instance = new SymplissimeWidget(element);
             widgetInstances.set(element, instance);
-            observeContainer(element.parentElement);
+            observeContainer(getObservationRoot(element));
         });
     }
 
     let observer;
     const observedContainers = new WeakSet();
-    let debouncePending = false;
+    let resetController;
     const DEBOUNCE_DELAY = 500;
+
+    function getObservationRoot(element) {
+        return element.closest('section, article, main') || element.parentElement;
+    }
 
     function observeContainer(container) {
         if (!observer || !container || observedContainers.has(container)) return;
@@ -1585,23 +1589,35 @@
         observedContainers.add(container);
     }
 
+    function scheduleInitialize() {
+        if (resetController) resetController.abort();
+        resetController = new AbortController();
+        const { signal } = resetController;
+        let start;
+        const frame = time => {
+            if (!start) start = time;
+            if (signal.aborted) return;
+            if (time - start >= DEBOUNCE_DELAY) {
+                initializeWidgets();
+            } else {
+                requestAnimationFrame(frame);
+            }
+        };
+        requestAnimationFrame(frame);
+    }
+
     function handleMutations(mutations) {
         const external = mutations.some(
             m => !m.target.closest('.symplissime-chat-widget')
         );
-        if (!external || debouncePending) return;
-        debouncePending = true;
-        setTimeout(() => {
-            debouncePending = false;
-            initializeWidgets();
-        }, DEBOUNCE_DELAY);
+        if (external) scheduleInitialize();
     }
 
     if (supports('MutationObserver')) {
         observer = new MutationObserver(handleMutations);
         document
             .querySelectorAll('.symplissime-chat-widget')
-            .forEach(widget => observeContainer(widget.parentElement));
+            .forEach(widget => observeContainer(getObservationRoot(widget)));
     }
 
     if (document.readyState === 'loading') {
