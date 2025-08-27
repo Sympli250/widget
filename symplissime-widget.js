@@ -64,6 +64,55 @@
         if (typeof color !== 'string') return false;
         return /^#[0-9A-Fa-f]{6}$/.test(color.trim());
     }
+
+    // Utility to test for feature support
+    function supports(feature) {
+        return typeof global[feature] !== 'undefined';
+    }
+
+    // Basic fetch polyfill using XMLHttpRequest as fallback
+    function fetchWithFallback(url, options = {}) {
+        if (supports('fetch')) {
+            return fetch(url, options);
+        }
+
+        return new Promise((resolve, reject) => {
+            try {
+                const xhr = new XMLHttpRequest();
+                const method = options.method || 'GET';
+                xhr.open(method, url, true);
+
+                if (options.headers) {
+                    Object.keys(options.headers).forEach(key => {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+
+                xhr.onload = function() {
+                    const response = {
+                        ok: xhr.status >= 200 && xhr.status < 300,
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        text: () => Promise.resolve(xhr.responseText),
+                        json: () => Promise.resolve(JSON.parse(xhr.responseText))
+                    };
+                    resolve(response);
+                };
+
+                xhr.onerror = function() {
+                    reject(new TypeError('Network request failed'));
+                };
+
+                if (options.body) {
+                    xhr.send(options.body);
+                } else {
+                    xhr.send();
+                }
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
     let THEMES = {};
@@ -189,7 +238,7 @@
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
         try {
-            const response = await fetch(themesUrl, { signal: controller.signal });
+            const response = await fetchWithFallback(themesUrl, { signal: controller.signal });
             if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
             if (data && typeof data === 'object') {
@@ -1278,7 +1327,7 @@
                 url: window.location.href,
                 messages: this.history
             };
-            fetch(this.config.apiEndpoint, {
+            fetchWithFallback(this.config.apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -1377,7 +1426,7 @@
 
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 15000);
-                const response = await fetch(this.config.apiEndpoint, {
+                const response = await fetchWithFallback(this.config.apiEndpoint, {
                     method: 'POST',
                     body: formData,
                     signal: controller.signal
@@ -1486,7 +1535,7 @@
         }, 100);
     }
 
-    if (typeof MutationObserver !== 'undefined') {
+    if (supports('MutationObserver')) {
         observer = new MutationObserver(handleMutations);
         document
             .querySelectorAll('.symplissime-chat-widget')
@@ -1502,6 +1551,8 @@
     SymplissimeWidgetNS.init = initializeWidgets;
     SymplissimeWidgetNS.getInstance = element => widgetInstances.get(element);
     SymplissimeWidgetNS.Widget = SymplissimeWidget;
+    SymplissimeWidgetNS.supports = supports;
+    SymplissimeWidgetNS.fetch = fetchWithFallback;
 
     global.SymplissimeWidget = SymplissimeWidgetNS;
 
