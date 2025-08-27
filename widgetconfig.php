@@ -1,6 +1,7 @@
 <?php
 $configFile = __DIR__ . '/widget_config.json';
 $themesFile = __DIR__ . '/widget-themes.json';
+require_once __DIR__ . '/snippet.php';
 
 $defaultThemes = [
     'symplissime' => [
@@ -158,32 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
-$snippet = '<script src="symplissime-widget.js"></script>' . "\n";
-$welcomeAttr = str_replace("\n", '&#10;', htmlspecialchars($config['greetings']['welcome_message'], ENT_QUOTES));
-$quickAttr = htmlspecialchars(str_replace("\n", '|', $config['attributes']['quick_messages']), ENT_QUOTES);
-$snippet .= '<div class="symplissime-chat-widget" '
-    . 'data-api-endpoint="' . htmlspecialchars($config['attributes']['api_endpoint']) . '" '
-    . 'data-workspace="' . htmlspecialchars($config['attributes']['workspace']) . '" '
-    . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
-    . 'data-welcome-message="' . $welcomeAttr . '" '
-    . 'data-quick-messages="' . $quickAttr . '" '
-    . 'data-greeting-mode="' . htmlspecialchars($config['greetings']['display_mode']) . '" '
-    . 'data-greeting-delay="' . htmlspecialchars($config['greetings']['display_delay']) . '" '
-    . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
-    . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
-    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '" '
-    . 'data-accent-color="' . htmlspecialchars($config['attributes']['accent_color']) . '" '
-    . 'data-font="' . htmlspecialchars($config['attributes']['font_family']) . '" '
-    . 'data-display-name="' . htmlspecialchars($config['general']['display_name']) . '" '
-    . 'data-profile-picture="' . htmlspecialchars($config['general']['profile_picture']) . '" '
-    . 'data-bubble-icon="' . ($config['general']['bubble_icon'] ? 'true' : 'false') . '" '
-    . 'data-bubble-position="' . htmlspecialchars($config['general']['bubble_position']) . '" '
-    . 'data-send-history-email="' . ($config['general']['send_history_email'] ? 'true' : 'false') . '" '
-    . 'data-owner-email="' . htmlspecialchars($config['general']['owner_email']) . '" '
-    . 'data-footer-enabled="' . ($config['general']['footer_enabled'] ? 'true' : 'false') . '" '
-    . 'data-footer-text="' . htmlspecialchars($config['general']['footer_text']) . '" '
-    . 'data-language="' . htmlspecialchars($config['general']['language']) . '" '
-    . 'data-time-zone="' . htmlspecialchars($config['general']['time_zone']) . '"></div>';
+$snippet = renderSnippet($config);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -484,49 +460,44 @@ $snippet .= '<div class="symplissime-chat-widget" '
     const fontSelect = document.getElementById('fontSelect');
     const resetBtn = document.getElementById('resetTheme');
 
-    function buildSnippet(data) {
-        const autoOpen = data.get('auto_open') ? 'true' : 'false';
-        const welcome = data.get('welcome_message').replace(/\n/g, '&#10;').replace(/"/g, '&quot;');
-        const quick = data.get('quick_messages').split('\n').map(m => m.trim()).filter(Boolean).join('|').replace(/"/g, '&quot;');
-        return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-quick-messages="${quick}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-accent-color="${data.get('accent_color')}" data-font="${data.get('font_family')}" data-display-name="${data.get('display_name')}" data-profile-picture="${data.get('profile_picture')}" data-bubble-icon="${data.get('bubble_icon') ? 'true' : 'false'}" data-bubble-position="${data.get('bubble_position')}" data-send-history-email="${data.get('send_history_email') ? 'true' : 'false'}" data-owner-email="${data.get('owner_email')}" data-footer-enabled="${data.get('footer_enabled') ? 'true' : 'false'}" data-footer-text="${data.get('footer_text')}" data-language="${data.get('language')}" data-time-zone="${data.get('time_zone')}"></div>`;
-    }
-
-    function updateSnippet() {
+      function updateSnippet() {
         const data = new FormData(form);
-        document.getElementById('snippet').value = buildSnippet(data);
-    }
+        fetch("generate_snippet.php", { method: "POST", body: data })
+            .then(r => r.text())
+            .then(text => { document.getElementById("snippet").value = text; });
+      }
 
-    function renderPreview() {
+      function renderPreview() {
         const data = new FormData(form);
-        const preview = document.getElementById('previewArea');
-        preview.innerHTML = '';
-        const widget = document.createElement('div');
-        widget.className = 'symplissime-chat-widget';
-        widget.dataset.apiEndpoint = data.get('api_endpoint');
-        widget.dataset.workspace = data.get('workspace');
-        widget.dataset.title = data.get('title');
-        widget.dataset.welcomeMessage = data.get('welcome_message');
-        widget.dataset.quickMessages = data.get('quick_messages').split('\n').map(m => m.trim()).filter(Boolean).join('|');
-        widget.dataset.greetingMode = data.get('display_mode');
-        widget.dataset.greetingDelay = data.get('display_delay');
-        widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
-        widget.dataset.position = data.get('position');
-        widget.dataset.theme = data.get('theme');
-        widget.dataset.accentColor = data.get('accent_color');
-        widget.dataset.font = data.get('font_family');
-        widget.dataset.displayName = data.get('display_name');
-        widget.dataset.profilePicture = data.get('profile_picture');
-        widget.dataset.bubbleIcon = data.get('bubble_icon') ? 'true' : 'false';
-        widget.dataset.bubblePosition = data.get('bubble_position');
-        widget.dataset.sendHistoryEmail = data.get('send_history_email') ? 'true' : 'false';
-        widget.dataset.ownerEmail = data.get('owner_email');
-        widget.dataset.footerEnabled = data.get('footer_enabled') ? 'true' : 'false';
-        widget.dataset.footerText = data.get('footer_text');
-        widget.dataset.language = data.get('language');
-        widget.dataset.timeZone = data.get('time_zone');
+        const preview = document.getElementById("previewArea");
+        preview.innerHTML = "";
+        const widget = document.createElement("div");
+        widget.className = "symplissime-chat-widget";
+        widget.dataset.apiEndpoint = data.get("api_endpoint");
+        widget.dataset.workspace = data.get("workspace");
+        widget.dataset.title = data.get("title");
+        widget.dataset.welcomeMessage = data.get("welcome_message");
+        widget.dataset.quickMessages = data.get("quick_messages").split("\n").map(m => m.trim()).filter(Boolean).join("|");
+        widget.dataset.greetingMode = data.get("display_mode");
+        widget.dataset.greetingDelay = data.get("display_delay");
+        widget.dataset.autoOpen = data.get("auto_open") ? "true" : "false";
+        widget.dataset.position = data.get("position");
+        widget.dataset.theme = data.get("theme");
+        widget.dataset.accentColor = data.get("accent_color");
+        widget.dataset.font = data.get("font_family");
+        widget.dataset.displayName = data.get("display_name");
+        widget.dataset.profilePicture = data.get("profile_picture");
+        widget.dataset.bubbleIcon = data.get("bubble_icon") ? "true" : "false";
+        widget.dataset.bubblePosition = data.get("bubble_position");
+        widget.dataset.sendHistoryEmail = data.get("send_history_email") ? "true" : "false";
+        widget.dataset.ownerEmail = data.get("owner_email");
+        widget.dataset.footerEnabled = data.get("footer_enabled") ? "true" : "false";
+        widget.dataset.footerText = data.get("footer_text");
+        widget.dataset.language = data.get("language");
+        widget.dataset.timeZone = data.get("time_zone");
         preview.appendChild(widget);
-    }
+      }
+
 
     function updateAll() {
         updateSnippet();
