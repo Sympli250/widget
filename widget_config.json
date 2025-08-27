@@ -5,6 +5,7 @@
     "title": "",
     "auto_open": false,
     "position": "bottom-right",
-    "theme": "symplissime"
+    "theme": "symplissime",
+    "quick_messages": []
   }
 }

@@ -82,7 +82,8 @@ $defaultConfig = [
         'title' => '',
         'auto_open' => false,
         'position' => 'bottom-right',
-        'theme' => 'symplissime'
+        'theme' => 'symplissime',
+        'quick_messages' => []
     ]
 ];
 
@@ -116,12 +117,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['attributes']['api_endpoint'] = $_POST['api_endpoint'] ?? 'symplissime-widget-api.php';
     $config['attributes']['workspace'] = $_POST['workspace'] ?? '';
     $config['attributes']['title'] = $_POST['title'] ?? '';
-    $config['attributes']['auto_open'] = isset($_POST['auto_open']);
-    $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
-    $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
+      $config['attributes']['auto_open'] = isset($_POST['auto_open']);
+      $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
+      $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
+      $quick = $_POST['quick_messages'] ?? [];
+      $quick = array_slice(array_filter(array_map('trim', $quick)), 0, 6);
+      $config['attributes']['quick_messages'] = $quick;
 
-    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-}
+      file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+  }
 $snippet = '<script src="symplissime-widget.js"></script>' . "\n";
 $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-api-endpoint="' . htmlspecialchars($config['attributes']['api_endpoint']) . '" '
@@ -129,7 +133,8 @@ $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
     . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
-    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '"></div>';
+    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '" '
+    . 'data-quick-messages="' . htmlspecialchars(implode('|', $config['attributes']['quick_messages'])) . '"></div>';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -184,14 +189,22 @@ $snippet .= '<div class="symplissime-chat-widget" '
             padding: 15px;
             margin-bottom: 20px;
         }
-        fieldset legend {
-            font-weight: 600;
-            padding: 0 5px;
-        }
-        .theme-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+          fieldset legend {
+              font-weight: 600;
+              padding: 0 5px;
+          }
+          .quick-reply-item {
+              display: flex;
+              gap: 10px;
+              margin-bottom: 5px;
+          }
+          .quick-reply-item input {
+              flex: 1;
+          }
+          .theme-inputs {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 10px;
         }
         .theme-inputs label {
             display: flex;
@@ -218,6 +231,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
     <div class="tabs">
         <button type="button" class="tablink active" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
+        <button type="button" class="tablink" data-tab="greetings">Greetings</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
         <button type="button" class="tablink" data-tab="preview">Preview</button>
     </div>
@@ -242,7 +256,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
         <?php endforeach; ?>
     </div>
 
-    <div id="attributes" class="tabcontent">
+      <div id="attributes" class="tabcontent">
         <label>API Endpoint:
             <input type="text" name="api_endpoint" value="<?php echo htmlspecialchars($config['attributes']['api_endpoint']); ?>">
         </label><br><br>
@@ -270,9 +284,24 @@ $snippet .= '<div class="symplissime-chat-widget" '
                 <?php endforeach; ?>
             </select>
         </label>
-    </div>
+      </div>
 
-    <div id="code" class="tabcontent">
+      <div id="greetings" class="tabcontent">
+          <fieldset>
+              <legend>Quick Replies (max 6)</legend>
+              <div id="quickRepliesContainer">
+                  <?php foreach ($config['attributes']['quick_messages'] as $msg): ?>
+                      <div class="quick-reply-item">
+                          <input type="text" name="quick_messages[]" value="<?php echo htmlspecialchars($msg); ?>">
+                          <button type="button" class="removeQuickReply">Supprimer</button>
+                      </div>
+                  <?php endforeach; ?>
+              </div>
+              <button type="button" id="addQuickReply">Ajouter une réponse rapide</button>
+          </fieldset>
+      </div>
+
+      <div id="code" class="tabcontent">
         <textarea readonly id="snippet"><?php echo htmlspecialchars($snippet); ?></textarea>
         <button type="button" id="copySnippet">Copier</button>
     </div>
@@ -303,13 +332,32 @@ $snippet .= '<div class="symplissime-chat-widget" '
         });
     });
 
-    const form = document.getElementById('configForm');
+      const form = document.getElementById('configForm');
+      const quickContainer = document.getElementById('quickRepliesContainer');
+      const addQuick = document.getElementById('addQuickReply');
 
-    function buildSnippet(data) {
-        const autoOpen = data.get('auto_open') ? 'true' : 'false';
-        return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
-    }
+      addQuick.addEventListener('click', () => {
+          if (quickContainer.children.length >= 6) return;
+          const div = document.createElement('div');
+          div.className = 'quick-reply-item';
+          div.innerHTML = '<input type="text" name="quick_messages[]"><button type="button" class="removeQuickReply">Supprimer</button>';
+          quickContainer.appendChild(div);
+          updateAll();
+      });
+
+      quickContainer.addEventListener('click', (e) => {
+          if (e.target.classList.contains('removeQuickReply')) {
+              e.target.parentElement.remove();
+              updateAll();
+          }
+      });
+
+      function buildSnippet(data) {
+          const autoOpen = data.get('auto_open') ? 'true' : 'false';
+          const quick = data.getAll('quick_messages[]').map(q => q.trim()).filter(Boolean).join('|');
+          return '<script src="symplissime-widget.js"><\/script>\n' +
+              `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-quick-messages="${quick}"></div>`;
+      }
 
     function updateSnippet() {
         const data = new FormData(form);
@@ -327,9 +375,13 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.title = data.get('title');
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
-        widget.dataset.theme = data.get('theme');
-        preview.appendChild(widget);
-    }
+          widget.dataset.theme = data.get('theme');
+          widget.dataset.quickMessages = data.getAll('quick_messages[]').map(q => q.trim()).filter(Boolean).join('|');
+          preview.appendChild(widget);
+          if (typeof initializeWidgets === 'function') {
+              initializeWidgets();
+          }
+      }
 
     function updateAll() {
         updateSnippet();

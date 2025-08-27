@@ -788,12 +788,15 @@
             const quickContainer = document.createElement('div');
             quickContainer.className = 'symplissime-quick-messages';
             
-            this.config.quickMessages.forEach(message => {
+            this.config.quickMessages.slice(0, 6).forEach(message => {
                 const btn = document.createElement('button');
                 btn.className = 'symplissime-quick-message';
                 btn.textContent = message;
                 btn.addEventListener('click', () => {
                     this.input.value = message;
+                    if (!this.isOpen) {
+                        this.openWidget();
+                    }
                     this.sendMessage();
                 });
                 quickContainer.appendChild(btn);
