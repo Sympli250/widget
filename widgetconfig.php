@@ -370,8 +370,10 @@ $snippet = renderSnippet($config);
 
 <script src="symplissime-widget.js"></script>
 <script>
-    const THEMES = <?php echo json_encode($themes, JSON_UNESCAPED_UNICODE); ?>;
-    const tabs = document.querySelectorAll('.tablink');
+    (function() {
+        const THEMES = <?php echo json_encode($themes, JSON_UNESCAPED_UNICODE); ?>;
+        window.WidgetConfig = { getThemes: () => THEMES };
+        const tabs = document.querySelectorAll('.tablink');
     const contents = document.querySelectorAll('.tabcontent');
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -586,6 +588,7 @@ $snippet = renderSnippet($config);
             updateAll();
         });
     }
+    })();
 </script>
 </body>
 </html>
