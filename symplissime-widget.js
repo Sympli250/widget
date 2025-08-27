@@ -13,6 +13,21 @@
         txt.innerHTML = str;
         return txt.value;
     }
+
+    function shadeColor(color, percent) {
+        let f = parseInt(color.slice(1), 16),
+            t = percent < 0 ? 0 : 255,
+            p = Math.abs(percent) / 100,
+            R = f >> 16,
+            G = f >> 8 & 0x00FF,
+            B = f & 0x0000FF;
+        return '#' + (
+            0x1000000 +
+            (Math.round((t - R) * p) + R) * 0x10000 +
+            (Math.round((t - G) * p) + G) * 0x100 +
+            (Math.round((t - B) * p) + B)
+        ).toString(16).slice(1);
+    }
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
     let THEMES = {};
@@ -642,6 +657,8 @@
                 subtitle: element.dataset.subtitle || 'Assistant technique en ligne',
                 placeholder: element.dataset.placeholder || 'Tapez votre message...',
                 theme: element.dataset.theme || 'symplissime',
+                accentColor: element.dataset.accentColor || '',
+                font: element.dataset.font || 'default',
                 autoOpen: element.dataset.autoOpen === 'true',
                 showBranding: element.dataset.showBranding !== 'false',
                 enableSound: element.dataset.enableSound === 'true',
@@ -706,6 +723,25 @@
                     container.style.setProperty(`--${cssVar}`, value);
                 }
             });
+
+            if (this.config.accentColor) {
+                const accent = this.config.accentColor;
+                container.style.setProperty('--primary', accent);
+                container.style.setProperty('--primary-hover', shadeColor(accent, -10));
+                container.style.setProperty('--primary-light', shadeColor(accent, 40));
+                container.style.setProperty('--primary-dark', shadeColor(accent, -20));
+            }
+
+            if (this.config.font && this.config.font !== 'default') {
+                const fonts = {
+                    'sans-serif': "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+                    'serif': "Georgia, 'Times New Roman', serif",
+                    'monospace': "'Courier New', monospace"
+                };
+                container.style.fontFamily = fonts[this.config.font] || '';
+            } else {
+                container.style.fontFamily = '';
+            }
         }
 
         applyTheme() {

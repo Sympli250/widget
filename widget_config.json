@@ -6,6 +6,8 @@
     "auto_open": false,
     "position": "bottom-right",
     "theme": "symplissime",
+    "accent_color": "#48bb78",
+    "font_family": "default",
     "quick_messages": "Qu'est-ce que Symplissime ?|Combien coûte Symplissime ?|A qui s'adresse Symplissime ?"
   },
   "greetings": {
