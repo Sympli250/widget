@@ -876,8 +876,20 @@
     };
 
     const I18N = {
-        fr: { minimize: 'Réduire', close: 'Fermer', placeholder: 'Tapez votre message...' },
-        en: { minimize: 'Minimize', close: 'Close', placeholder: 'Type your message...' }
+        fr: {
+            minimize: 'Réduire',
+            close: 'Fermer',
+            placeholder: 'Tapez votre message...',
+            open: 'Ouvrir la conversation',
+            openDescription: 'Ouvre la fenêtre de discussion'
+        },
+        en: {
+            minimize: 'Minimize',
+            close: 'Close',
+            placeholder: 'Type your message...',
+            open: 'Open chat',
+            openDescription: 'Opens the chat window'
+        }
     };
 
     function getConfig(element) {
@@ -1086,10 +1098,11 @@
             const placeholder = texts.placeholder;
 
             this.element.innerHTML = `
-                <button class="symplissime-fab" type="button" aria-label="Ouvrir la conversation" aria-haspopup="dialog" aria-expanded="false">
+                <button class="symplissime-fab" type="button" aria-label="${texts.open}" aria-describedby="symplissime-fab-desc" aria-haspopup="dialog" aria-expanded="false">
                     <div class="symplissime-fab-icon">${ICONS.chat}</div>
                     <div class="symplissime-fab-badge"></div>
                 </button>
+                <div id="symplissime-fab-desc" class="symplissime-sr-only">${texts.openDescription}</div>
 
                 <div class="symplissime-widget" role="dialog" aria-describedby="symplissime-widget-desc">
                     <div class="symplissime-header">
@@ -1525,20 +1538,34 @@
 
         showGreetingBubble() {
             if (this.greetingBubble) return;
+            const texts = I18N[this.config.language] || I18N.fr;
             const bubble = document.createElement('div');
             bubble.className = 'symplissime-greeting-bubble';
             const msg = this.config.welcomeMessage && this.config.welcomeMessage.trim() !== ''
                 ? this.config.welcomeMessage
                 : `👋 **Bonjour !** Bienvenue chez ${this.config.title}.\n\nComment puis-je vous aider aujourd'hui ?`;
+            const plainText = msg
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/\n/g, ' ');
             bubble.innerHTML = sanitizeHTML(
                 msg
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
                     .replace(/\n/g, '<br>')
             );
+            bubble.setAttribute('role', 'button');
+            bubble.setAttribute('tabindex', '0');
+            bubble.setAttribute('aria-label', `${plainText} ${texts.open}`);
             this.element.appendChild(bubble);
             const handler = () => this.openWidget();
             this.addListener(bubble, 'click', handler);
+            this.addListener(bubble, 'keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handler();
+                }
+            });
             this.greetingBubble = bubble;
         }
 
