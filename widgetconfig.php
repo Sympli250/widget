@@ -138,39 +138,107 @@ $snippet .= '<div class="symplissime-chat-widget" '
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuration du Widget</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .tabs { margin-bottom: 10px; }
-        .tabs button { padding: 10px; cursor: pointer; }
-        .tabcontent { display: none; border: 1px solid #ccc; padding: 10px; }
-        .tabcontent.active { display: block; }
-        .theme-input { margin-bottom: 5px; }
-        textarea { width: 100%; height: 100px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f7fafc;
+            color: #2d3748;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5568;
+            border-radius: 6px 6px 0 0;
+        }
+        .tabs button.active {
+            background: #3182ce;
+            color: #fff;
+        }
+        .tabcontent {
+            display: none;
+        }
+        .tabcontent.active {
+            display: block;
+        }
+        fieldset {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        fieldset legend {
+            font-weight: 600;
+            padding: 0 5px;
+        }
+        .theme-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .theme-inputs label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        #previewArea {
+            min-height: 200px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
     </style>
 </head>
 <body>
+<div class="container">
 <form method="post" id="configForm">
     <div class="tabs">
-        <button type="button" class="tablink" data-tab="themes">Thèmes</button>
+        <button type="button" class="tablink active" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
+        <button type="button" class="tablink" data-tab="preview">Preview</button>
     </div>
 
     <div id="themes" class="tabcontent">
         <?php foreach ($themes as $key => $theme): ?>
             <fieldset>
                 <legend><?php echo htmlspecialchars($theme['name']); ?></legend>
+                <div class="theme-inputs">
                 <?php foreach ($theme as $prop => $val): if ($prop === 'name') continue; ?>
                     <label>
-                        <?php echo $prop; ?>:
+                        <span><?php echo $prop; ?></span>
                         <?php if (strpos($val, '#') === 0): ?>
                             <input type="color" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
                         <?php else: ?>
                             <input type="text" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
                         <?php endif; ?>
-                    </label><br>
+                    </label>
                 <?php endforeach; ?>
+                </div>
             </fieldset>
-            <br>
         <?php endforeach; ?>
     </div>
 
@@ -209,32 +277,67 @@ $snippet .= '<div class="symplissime-chat-widget" '
         <button type="button" id="copySnippet">Copier</button>
     </div>
 
+    <div id="preview" class="tabcontent">
+        <p>Prévisualisation du widget (apparait en bas de page).</p>
+        <div id="previewArea"></div>
+    </div>
+
     <br>
     <button type="submit">Sauvegarder</button>
 </form>
+</div>
 
+<script src="symplissime-widget.js"></script>
 <script>
     const tabs = document.querySelectorAll('.tablink');
     const contents = document.querySelectorAll('.tabcontent');
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             contents.forEach(c => c.classList.remove('active'));
             document.getElementById(btn.dataset.tab).classList.add('active');
+            if (btn.dataset.tab === 'preview') {
+                updateAll();
+            }
         });
     });
-    // Activate first tab by default
-    document.querySelector('.tablink').click();
 
-    // Update snippet on input change
     const form = document.getElementById('configForm');
+
+    function buildSnippet(data) {
+        const autoOpen = data.get('auto_open') ? 'true' : 'false';
+        return '<script src="symplissime-widget.js"><\/script>\n' +
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
+    }
+
     function updateSnippet() {
         const data = new FormData(form);
-        const autoOpen = data.get('auto_open') ? 'true' : 'false';
-        const snippet = '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
-        document.getElementById('snippet').value = snippet;
+        document.getElementById('snippet').value = buildSnippet(data);
     }
-    form.addEventListener('input', updateSnippet);
+
+    function renderPreview() {
+        const data = new FormData(form);
+        const preview = document.getElementById('previewArea');
+        preview.innerHTML = '';
+        const widget = document.createElement('div');
+        widget.className = 'symplissime-chat-widget';
+        widget.dataset.apiEndpoint = data.get('api_endpoint');
+        widget.dataset.workspace = data.get('workspace');
+        widget.dataset.title = data.get('title');
+        widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
+        widget.dataset.position = data.get('position');
+        widget.dataset.theme = data.get('theme');
+        preview.appendChild(widget);
+    }
+
+    function updateAll() {
+        updateSnippet();
+        renderPreview();
+    }
+
+    form.addEventListener('input', updateAll);
+    updateAll();
 
     document.getElementById('copySnippet').addEventListener('click', () => {
         const text = document.getElementById('snippet').value;
