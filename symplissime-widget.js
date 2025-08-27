@@ -826,7 +826,8 @@
         
         addQuickMessages() {
             if (this.config.quickMessages.length === 0) return;
-            
+            if (this.messages.querySelector('.symplissime-quick-messages')) return;
+
             const quickContainer = document.createElement('div');
             quickContainer.className = 'symplissime-quick-messages';
             
@@ -834,10 +835,14 @@
                 const btn = document.createElement('button');
                 btn.className = 'symplissime-quick-message';
                 btn.textContent = message;
+
+                const container = quickContainer;
                 btn.addEventListener('click', () => {
                     this.input.value = message;
                     this.sendMessage();
+                    container.remove();
                 });
+
                 quickContainer.appendChild(btn);
             });
             
