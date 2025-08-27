@@ -77,6 +77,7 @@ $defaultThemes = [
 
 $defaultConfig = [
     'attributes' => [
+        'api_endpoint' => 'symplissime-widget-api.php',
         'workspace' => '',
         'title' => '',
         'auto_open' => false,
@@ -112,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     file_put_contents($themesFile, json_encode($themes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
+    $config['attributes']['api_endpoint'] = $_POST['api_endpoint'] ?? 'symplissime-widget-api.php';
     $config['attributes']['workspace'] = $_POST['workspace'] ?? '';
     $config['attributes']['title'] = $_POST['title'] ?? '';
     $config['attributes']['auto_open'] = isset($_POST['auto_open']);
@@ -122,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $snippet = '<script src="symplissime-widget.js"></script>' . "\n";
 $snippet .= '<div class="symplissime-chat-widget" '
+    . 'data-api-endpoint="' . htmlspecialchars($config['attributes']['api_endpoint']) . '" '
     . 'data-workspace="' . htmlspecialchars($config['attributes']['workspace']) . '" '
     . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
@@ -172,6 +175,9 @@ $snippet .= '<div class="symplissime-chat-widget" '
     </div>
 
     <div id="attributes" class="tabcontent">
+        <label>API Endpoint:
+            <input type="text" name="api_endpoint" value="<?php echo htmlspecialchars($config['attributes']['api_endpoint']); ?>">
+        </label><br><br>
         <label>Workspace:
             <input type="text" name="workspace" value="<?php echo htmlspecialchars($config['attributes']['workspace']); ?>">
         </label><br><br>
@@ -200,6 +206,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
 
     <div id="code" class="tabcontent">
         <textarea readonly id="snippet"><?php echo htmlspecialchars($snippet); ?></textarea>
+        <button type="button" id="copySnippet">Copier</button>
     </div>
 
     <br>
@@ -224,10 +231,17 @@ $snippet .= '<div class="symplissime-chat-widget" '
         const data = new FormData(form);
         const autoOpen = data.get('auto_open') ? 'true' : 'false';
         const snippet = `<script src="symplissime-widget.js"></script>\n` +
-            `<div class="symplissime-chat-widget" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
         document.getElementById('snippet').value = snippet;
     }
     form.addEventListener('input', updateSnippet);
+
+    document.getElementById('copySnippet').addEventListener('click', () => {
+        const text = document.getElementById('snippet').value;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Snippet copié !');
+        });
+    });
 </script>
 </body>
 </html>
