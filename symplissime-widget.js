@@ -151,7 +151,7 @@
             bottom: 80px;
             right: 0;
             width: 400px;
-            height: 600px;
+            max-height: calc(100vh - 120px);
             background: var(--bg);
             border-radius: 16px;
             box-shadow: var(--shadow);
@@ -169,6 +169,12 @@
             opacity: 1;
             transform: translateY(0) scale(1);
             pointer-events: all;
+        }
+
+        @media (max-height: 600px) {
+            .symplissime-widget {
+                height: calc(100vh - 120px);
+            }
         }
         
         .symplissime-widget.minimized {
