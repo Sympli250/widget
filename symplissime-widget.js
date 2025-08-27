@@ -31,6 +31,39 @@
             (Math.round((t - B) * p) + B)
         ).toString(16).slice(1);
     }
+
+    function isValidUrl(url) {
+        if (typeof url !== 'string') return false;
+        url = url.trim();
+        if (!url) return false;
+        const absolute = /^(https?:\/\/)[^\s/$.?#].*/i;
+        const relative = /^[\.\w\/-]+$/;
+        try {
+            if (absolute.test(url)) {
+                new URL(url);
+                return true;
+            }
+            if (relative.test(url)) {
+                new URL(url, window.location.origin);
+                return true;
+            }
+        } catch (e) {
+            return false;
+        }
+        return false;
+    }
+
+    function isValidEmail(email) {
+        if (typeof email !== 'string') return false;
+        email = email.trim();
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
+    }
+
+    function isValidHex(color) {
+        if (typeof color !== 'string') return false;
+        return /^#[0-9A-Fa-f]{6}$/.test(color.trim());
+    }
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
     let THEMES = {};
@@ -814,32 +847,55 @@
         }
 
         getConfig(element) {
+            const apiEndpoint = isValidUrl(element.dataset.apiEndpoint) ? element.dataset.apiEndpoint : 'symplissime-widget-api.php';
+            const workspace = /^[\w-]{1,50}$/.test(element.dataset.workspace || '') ? element.dataset.workspace : 'support-windows';
+            const title = (element.dataset.title || 'Symplissime AI').trim();
+            const subtitle = (element.dataset.subtitle || 'Assistant technique en ligne').trim();
+            const placeholder = (element.dataset.placeholder || 'Tapez votre message...').trim();
+            const theme = /^[\w-]{1,30}$/.test(element.dataset.theme || '') ? element.dataset.theme : 'symplissime';
+            const accentColor = isValidHex(element.dataset.accentColor) ? element.dataset.accentColor : '';
+            const fontChoices = ['default', 'sans-serif', 'serif', 'monospace'];
+            const font = fontChoices.includes(element.dataset.font) ? element.dataset.font : 'default';
+            const quickMessages = element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [];
+            const welcomeMessage = element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '';
+            const greetingModes = ['bubble_immediate', 'bubble_delayed', 'window'];
+            const greetingMode = greetingModes.includes(element.dataset.greetingMode) ? element.dataset.greetingMode : 'bubble_immediate';
+            const parsedDelay = parseInt(element.dataset.greetingDelay, 10);
+            const greetingDelay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 30;
+            const displayName = (element.dataset.displayName || title || 'Symplissime AI').trim();
+            const profilePicture = isValidUrl(element.dataset.profilePicture) ? element.dataset.profilePicture : '';
+            const bubblePosition = ['left', 'right'].includes(element.dataset.bubblePosition) ? element.dataset.bubblePosition : 'right';
+            const ownerEmail = isValidEmail(element.dataset.ownerEmail) ? element.dataset.ownerEmail : '';
+            const footerText = (element.dataset.footerText || '').trim();
+            const language = /^[a-z]{2}$/i.test(element.dataset.language || '') ? element.dataset.language : 'fr';
+            const timeZone = (element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone).trim();
+
             return {
-                apiEndpoint: element.dataset.apiEndpoint || 'symplissime-widget-api.php',
-                workspace: element.dataset.workspace || 'support-windows',
-                title: element.dataset.title || 'Symplissime AI',
-                subtitle: element.dataset.subtitle || 'Assistant technique en ligne',
-                placeholder: element.dataset.placeholder || 'Tapez votre message...',
-                theme: element.dataset.theme || 'symplissime',
-                accentColor: element.dataset.accentColor || '',
-                font: element.dataset.font || 'default',
+                apiEndpoint,
+                workspace,
+                title,
+                subtitle,
+                placeholder,
+                theme,
+                accentColor,
+                font,
                 autoOpen: element.dataset.autoOpen === 'true',
                 showBranding: element.dataset.showBranding !== 'false',
                 enableSound: element.dataset.enableSound === 'true',
-                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [],
-                welcomeMessage: element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '',
-                greetingMode: element.dataset.greetingMode || 'bubble_immediate',
-                greetingDelay: parseInt(element.dataset.greetingDelay) || 30,
-                displayName: element.dataset.displayName || element.dataset.title || 'Symplissime AI',
-                profilePicture: element.dataset.profilePicture || '',
+                quickMessages,
+                welcomeMessage,
+                greetingMode,
+                greetingDelay,
+                displayName,
+                profilePicture,
                 bubbleIcon: element.dataset.bubbleIcon !== 'false',
-                bubblePosition: element.dataset.bubblePosition || 'right',
+                bubblePosition,
                 sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
-                ownerEmail: element.dataset.ownerEmail || '',
+                ownerEmail,
                 footerEnabled: element.dataset.footerEnabled === 'true',
-                footerText: element.dataset.footerText || '',
-                language: element.dataset.language || 'fr',
-                timeZone: element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone
+                footerText,
+                language,
+                timeZone
             };
         }
         
