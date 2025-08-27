@@ -231,7 +231,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
     <div class="tabs">
         <button type="button" class="tablink active" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
-        <button type="button" class="tablink" data-tab="greetings">Greetings</button>
+        <button type="button" class="tablink" data-tab="greetings">Réponses rapides</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
         <button type="button" class="tablink" data-tab="preview">Preview</button>
     </div>
