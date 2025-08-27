@@ -22,6 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Démarrage de session pour maintenir le contexte
+// Si un sessionId est fourni par le client, on l'utilise pour
+// synchroniser la session PHP avec le widget JavaScript
+$clientSessionId = $_POST['sessionId'] ?? '';
+if ($clientSessionId !== '') {
+    $clientSessionId = preg_replace('/[^a-zA-Z0-9-]/', '', $clientSessionId);
+    if ($clientSessionId !== '') {
+        session_id($clientSessionId);
+    }
+}
 session_start();
 
 // Handler principal
@@ -49,15 +58,8 @@ function handleChatRequest() {
         return;
     }
     
-    // Session ID pour maintenir le contexte
-    if (isset($_POST['sessionId']) && $_POST['sessionId'] !== '') {
-        // Nettoyage basique de l'ID fourni
-        $_SESSION['widget_session_id'] = preg_replace('/[^a-zA-Z0-9_-]/', '', $_POST['sessionId']);
-    }
-    if (!isset($_SESSION['widget_session_id'])) {
-        $_SESSION['widget_session_id'] = uniqid('widget_', true);
-    }
-    $sessionId = $_SESSION['widget_session_id'];
+    // Session ID partagé entre client et serveur
+    $sessionId = session_id();
     
     // Préparer la requête vers l'API Symplissime
     $url = "$BASE_URL/api/v1/workspace/$workspace/chat";
