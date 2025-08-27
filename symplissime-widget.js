@@ -108,7 +108,24 @@
             opacity: 0;
             pointer-events: none;
         }
-        
+
+        /* Greeting bubble */
+        .symplissime-greeting-bubble {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            max-width: 250px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text);
+            z-index: 1000;
+        }
+        .symplissime-greeting-bubble strong { font-weight: 600; }
+        .symplissime-greeting-bubble em { font-style: italic; }
+
         /* Widget Window */
         .symplissime-widget {
             position: absolute;
@@ -587,7 +604,9 @@
                 showBranding: element.dataset.showBranding !== 'false',
                 enableSound: element.dataset.enableSound === 'true',
                 quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|') : [],
-                welcomeMessage: element.dataset.welcomeMessage || ''
+                welcomeMessage: element.dataset.welcomeMessage || '',
+                greetingMode: element.dataset.greetingMode || 'bubble_immediate',
+                greetingDelay: parseInt(element.dataset.greetingDelay) || 30
             };
         }
         
@@ -600,7 +619,15 @@
             this.applyTheme();
             this.createWidget();
             this.bindEvents();
-            this.showWelcomeMessage();
+            this.welcomeShown = false;
+
+            if (this.config.greetingMode !== 'chat') {
+                this.showWelcomeMessage();
+                const delay = this.config.greetingMode === 'bubble_delay'
+                    ? this.config.greetingDelay * 1000
+                    : 0;
+                setTimeout(() => this.showGreetingBubble(), delay);
+            }
             
             if (this.config.autoOpen) {
                 setTimeout(() => this.openWidget(), 1000);
@@ -739,6 +766,15 @@
             this.widget.classList.add('open');
             this.fab.classList.add('closing');
             this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
+
+            if (this.greetingBubble) {
+                this.greetingBubble.remove();
+                this.greetingBubble = null;
+            }
+
+            if (this.config.greetingMode === 'chat' && !this.welcomeShown) {
+                this.showWelcomeMessage();
+            }
             
             setTimeout(() => {
                 this.input.focus();
@@ -892,6 +928,7 @@
                     ? this.config.welcomeMessage
                     : `👋 **Bonjour !** Bienvenue chez ${this.config.title}.\n\nComment puis-je vous aider aujourd'hui ?`;
                 this.addMessage(msg);
+                this.welcomeShown = true;
 
                 if (this.config.quickMessages.length > 0) {
                     setTimeout(() => {
@@ -899,6 +936,22 @@
                     }, 500);
                 }
             }, 1000);
+        }
+
+        showGreetingBubble() {
+            if (this.greetingBubble) return;
+            const bubble = document.createElement('div');
+            bubble.className = 'symplissime-greeting-bubble';
+            const msg = this.config.welcomeMessage && this.config.welcomeMessage.trim() !== ''
+                ? this.config.welcomeMessage
+                : `👋 **Bonjour !** Bienvenue chez ${this.config.title}.\n\nComment puis-je vous aider aujourd'hui ?`;
+            bubble.innerHTML = msg
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+            this.element.appendChild(bubble);
+            bubble.addEventListener('click', () => this.openWidget());
+            this.greetingBubble = bubble;
         }
     }
     

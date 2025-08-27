@@ -85,7 +85,9 @@ $defaultConfig = [
         'theme' => 'symplissime'
     ],
     'greetings' => [
-        'welcome_message' => "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?"
+        'welcome_message' => "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
+        'display_mode' => 'bubble_immediate',
+        'display_delay' => 30
     ]
 ];
 
@@ -123,6 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
     $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
     $config['greetings']['welcome_message'] = $_POST['welcome_message'] ?? $defaultConfig['greetings']['welcome_message'];
+    $config['greetings']['display_mode'] = $_POST['display_mode'] ?? $defaultConfig['greetings']['display_mode'];
+    $config['greetings']['display_delay'] = isset($_POST['display_delay']) ? (int)$_POST['display_delay'] : $defaultConfig['greetings']['display_delay'];
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
@@ -133,6 +137,8 @@ $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-workspace="' . htmlspecialchars($config['attributes']['workspace']) . '" '
     . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
     . 'data-welcome-message="' . $welcomeAttr . '" '
+    . 'data-greeting-mode="' . htmlspecialchars($config['greetings']['display_mode']) . '" '
+    . 'data-greeting-delay="' . htmlspecialchars($config['greetings']['display_delay']) . '" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
     . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
     . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '"></div>';
@@ -283,6 +289,18 @@ $snippet .= '<div class="symplissime-chat-widget" '
         <label>Welcome message:<br>
             <textarea name="welcome_message"><?php echo htmlspecialchars($config['greetings']['welcome_message']); ?></textarea>
         </label>
+        <br><br>
+        <label>Display mode:<br>
+            <select name="display_mode">
+                <option value="bubble_immediate" <?php echo $config['greetings']['display_mode'] === 'bubble_immediate' ? 'selected' : ''; ?>>Au-dessus de la bulle – immédiat</option>
+                <option value="bubble_delay" <?php echo $config['greetings']['display_mode'] === 'bubble_delay' ? 'selected' : ''; ?>>Au-dessus de la bulle – après délai</option>
+                <option value="chat" <?php echo $config['greetings']['display_mode'] === 'chat' ? 'selected' : ''; ?>>Dans la fenêtre de chat uniquement</option>
+            </select>
+        </label>
+        <br><br>
+        <label>Delay (s):<br>
+            <input type="number" name="display_delay" min="0" value="<?php echo htmlspecialchars($config['greetings']['display_delay']); ?>">
+        </label>
     </div>
 
     <div id="code" class="tabcontent">
@@ -322,7 +340,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
         const autoOpen = data.get('auto_open') ? 'true' : 'false';
         const welcome = data.get('welcome_message').replace(/\n/g, '&#10;').replace(/"/g, '&quot;');
         return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
     }
 
     function updateSnippet() {
@@ -340,6 +358,8 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.workspace = data.get('workspace');
         widget.dataset.title = data.get('title');
         widget.dataset.welcomeMessage = data.get('welcome_message');
+        widget.dataset.greetingMode = data.get('display_mode');
+        widget.dataset.greetingDelay = data.get('display_delay');
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
         widget.dataset.theme = data.get('theme');
