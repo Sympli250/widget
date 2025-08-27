@@ -7,6 +7,12 @@
 
 (function() {
     'use strict';
+
+    function decodeHTML(str) {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
     let THEMES = {};
@@ -603,8 +609,8 @@
                 autoOpen: element.dataset.autoOpen === 'true',
                 showBranding: element.dataset.showBranding !== 'false',
                 enableSound: element.dataset.enableSound === 'true',
-                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|') : [],
-                welcomeMessage: element.dataset.welcomeMessage || '',
+                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [],
+                welcomeMessage: element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '',
                 greetingMode: element.dataset.greetingMode || 'bubble_immediate',
                 greetingDelay: parseInt(element.dataset.greetingDelay) || 30
             };
@@ -621,14 +627,13 @@
             this.bindEvents();
             this.welcomeShown = false;
 
-            if (this.config.greetingMode !== 'chat') {
-                this.showWelcomeMessage();
+            if (this.config.greetingMode === 'bubble_immediate' || this.config.greetingMode === 'bubble_delay') {
                 const delay = this.config.greetingMode === 'bubble_delay'
                     ? this.config.greetingDelay * 1000
                     : 0;
                 setTimeout(() => this.showGreetingBubble(), delay);
             }
-            
+
             if (this.config.autoOpen) {
                 setTimeout(() => this.openWidget(), 1000);
             }
@@ -772,10 +777,10 @@
                 this.greetingBubble = null;
             }
 
-            if (this.config.greetingMode === 'chat' && !this.welcomeShown) {
+            if (!this.welcomeShown) {
                 this.showWelcomeMessage();
             }
-            
+
             setTimeout(() => {
                 this.input.focus();
             }, 300);

@@ -5,7 +5,8 @@
     "title": "",
     "auto_open": false,
     "position": "bottom-right",
-    "theme": "symplissime"
+    "theme": "symplissime",
+    "quick_messages": ""
   },
   "greetings": {
     "welcome_message": "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
