@@ -1,7 +1,81 @@
 <?php
 $configFile = __DIR__ . '/widget_config.json';
+$themesFile = __DIR__ . '/widget-themes.json';
+
+$defaultThemes = [
+    'symplissime' => [
+        'name' => 'Symplissime Classic',
+        'primary' => '#48bb78',
+        'primaryHover' => '#38a169',
+        'primaryLight' => '#c6f6d5',
+        'primaryDark' => '#2f855a',
+        'success' => '#48bb78',
+        'background' => '#ffffff',
+        'backgroundSecondary' => '#f7fafc',
+        'text' => '#1a202c',
+        'textSecondary' => '#718096',
+        'border' => '#e2e8f0',
+        'shadow' => '0 4px 20px rgba(72, 187, 120, 0.15)'
+    ],
+    'professional' => [
+        'name' => 'Professional Blue',
+        'primary' => '#4299e1',
+        'primaryHover' => '#3182ce',
+        'primaryLight' => '#bee3f8',
+        'primaryDark' => '#2c5aa0',
+        'success' => '#48bb78',
+        'background' => '#ffffff',
+        'backgroundSecondary' => '#f7fafc',
+        'text' => '#1a202c',
+        'textSecondary' => '#718096',
+        'border' => '#e2e8f0',
+        'shadow' => '0 4px 20px rgba(66, 153, 225, 0.15)'
+    ],
+    'modern' => [
+        'name' => 'Modern Purple',
+        'primary' => '#9f7aea',
+        'primaryHover' => '#805ad5',
+        'primaryLight' => '#e9d8fd',
+        'primaryDark' => '#6b46c1',
+        'success' => '#48bb78',
+        'background' => '#ffffff',
+        'backgroundSecondary' => '#f7fafc',
+        'text' => '#1a202c',
+        'textSecondary' => '#718096',
+        'border' => '#e2e8f0',
+        'shadow' => '0 4px 20px rgba(159, 122, 234, 0.15)'
+    ],
+    'elegant' => [
+        'name' => 'Elegant Dark',
+        'primary' => '#4a5568',
+        'primaryHover' => '#2d3748',
+        'primaryLight' => '#e2e8f0',
+        'primaryDark' => '#1a202c',
+        'success' => '#48bb78',
+        'background' => '#1a202c',
+        'backgroundSecondary' => '#2d3748',
+        'text' => '#f7fafc',
+        'textSecondary' => '#a0aec0',
+        'border' => '#4a5568',
+        'shadow' => '0 4px 20px rgba(74, 85, 104, 0.3)'
+    ],
+    'minimal' => [
+        'name' => 'Minimal Gray',
+        'primary' => '#a0aec0',
+        'primaryHover' => '#718096',
+        'primaryLight' => '#f7fafc',
+        'primaryDark' => '#4a5568',
+        'success' => '#48bb78',
+        'background' => '#ffffff',
+        'backgroundSecondary' => '#f7fafc',
+        'text' => '#1a202c',
+        'textSecondary' => '#718096',
+        'border' => '#e2e8f0',
+        'shadow' => '0 4px 20px rgba(160, 174, 192, 0.15)'
+    ]
+];
+
 $defaultConfig = [
-    'themes' => ['#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff'],
     'attributes' => [
         'workspace' => '',
         'title' => '',
@@ -18,18 +92,31 @@ if (file_exists($configFile)) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $themes = $_POST['themes'] ?? [];
-    for ($i = 0; $i < 5; $i++) {
-        $config['themes'][$i] = $themes[$i] ?? $config['themes'][$i];
+$themes = $defaultThemes;
+if (file_exists($themesFile)) {
+    $json = json_decode(file_get_contents($themesFile), true);
+    if (is_array($json)) {
+        $themes = array_replace_recursive($themes, $json);
     }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postedThemes = $_POST['themes'] ?? [];
+    foreach ($themes as $key => $values) {
+        foreach ($values as $prop => $val) {
+            if (isset($postedThemes[$key][$prop])) {
+                $themes[$key][$prop] = $postedThemes[$key][$prop];
+            }
+        }
+    }
+    file_put_contents($themesFile, json_encode($themes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     $config['attributes']['workspace'] = $_POST['workspace'] ?? '';
     $config['attributes']['title'] = $_POST['title'] ?? '';
     $config['attributes']['auto_open'] = isset($_POST['auto_open']);
     $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
 
-    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 
 $snippet = '<script src="symplissime-widget.js" '
@@ -63,13 +150,22 @@ $snippet = '<script src="symplissime-widget.js" '
     </div>
 
     <div id="themes" class="tabcontent">
-        <?php for ($i = 0; $i < 5; $i++): ?>
-            <div class="theme-input">
-                <label>Couleur <?php echo $i + 1; ?>:
-                    <input type="color" name="themes[]" value="<?php echo htmlspecialchars($config['themes'][$i]); ?>">
-                </label>
-            </div>
-        <?php endfor; ?>
+        <?php foreach ($themes as $key => $theme): ?>
+            <fieldset>
+                <legend><?php echo htmlspecialchars($theme['name']); ?></legend>
+                <?php foreach ($theme as $prop => $val): if ($prop === 'name') continue; ?>
+                    <label>
+                        <?php echo $prop; ?>:
+                        <?php if (strpos($val, '#') === 0): ?>
+                            <input type="color" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
+                        <?php else: ?>
+                            <input type="text" name="themes[<?php echo $key; ?>][<?php echo $prop; ?>]" value="<?php echo htmlspecialchars($val); ?>">
+                        <?php endif; ?>
+                    </label><br>
+                <?php endforeach; ?>
+            </fieldset>
+            <br>
+        <?php endforeach; ?>
     </div>
 
     <div id="attributes" class="tabcontent">
