@@ -288,7 +288,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
 
       <div id="greetings" class="tabcontent">
           <fieldset>
-              <legend>Quick Replies (max 6)</legend>
+              <legend>Réponses rapides (max 6)</legend>
               <div id="quickRepliesContainer">
                   <?php foreach ($config['attributes']['quick_messages'] as $msg): ?>
                       <div class="quick-reply-item">
