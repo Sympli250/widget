@@ -219,7 +219,19 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
+        .symplissime-sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         /* FAB Button */
         .symplissime-fab {
             width: 64px;
@@ -897,18 +909,18 @@
             const placeholder = texts.placeholder;
 
             this.element.innerHTML = `
-                <button class="symplissime-fab" type="button" aria-label="Ouvrir la conversation" aria-haspopup="dialog">
+                <button class="symplissime-fab" type="button" aria-label="Ouvrir la conversation" aria-haspopup="dialog" aria-expanded="false">
                     <div class="symplissime-fab-icon">${ICONS.chat}</div>
                     <div class="symplissime-fab-badge"></div>
                 </button>
 
-                <div class="symplissime-widget">
+                <div class="symplissime-widget" role="dialog" aria-describedby="symplissime-widget-desc">
                     <div class="symplissime-header">
                         <div class="symplissime-header-content">
                             <div class="symplissime-avatar"></div>
                             <div class="symplissime-header-info">
                                 <h3>${this.config.displayName}</h3>
-                                <p>${this.config.subtitle}</p>
+                                <p id="symplissime-widget-desc">${this.config.subtitle}</p>
                             </div>
                         </div>
                         <div class="symplissime-controls">
@@ -921,12 +933,14 @@
                         </div>
                     </div>
 
-                    <div class="symplissime-messages"></div>
+                    <div class="symplissime-messages" aria-live="polite"></div>
 
                     <div class="symplissime-input-container">
                         <form class="symplissime-input-form">
+                            <div id="symplissime-input-desc" class="symplissime-sr-only">${placeholder}</div>
                             <textarea class="symplissime-input"
                                      placeholder="${placeholder}"
+                                     aria-describedby="symplissime-input-desc"
                                      rows="1"
                                      maxlength="1000"></textarea>
                             <button class="symplissime-send" type="submit">
@@ -1061,6 +1075,7 @@
         
         openWidget() {
             this.isOpen = true;
+            this.fab.setAttribute('aria-expanded', 'true');
             this.unreadCount = 0;
             this.updateBadge();
             this.widget.classList.add('open');
@@ -1086,6 +1101,7 @@
             this.isMinimized = false;
             this.widget.classList.remove('open', 'minimized');
             this.fab.classList.remove('closing');
+            this.fab.setAttribute('aria-expanded', 'false');
             this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
             if (this.config.sendHistoryEmail && this.config.ownerEmail) {
                 this.sendHistoryEmail();
