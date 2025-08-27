@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symplissime AI Widget Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #000;
+        }
+
+        .option {
+            margin-bottom: 50px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .option-header {
+            background: #f5f5f5;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .option-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .option-desc {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .option-content {
+            padding: 20px;
+        }
+
+        .code {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .attribute {
+            margin: 10px 0;
+        }
+
+        .attribute-name {
+            font-weight: 500;
+            color: #000;
+        }
+
+        .attribute-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 40px 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+            
+            .code {
+                font-size: 12px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Symplissime AI Widget Test</h1>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Intégration basique</div>
+                <div class="option-desc">Configuration minimale avec paramètres par défaut</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js"&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Intégration standard</div>
+                <div class="option-desc">Configuration recommandée avec workspace et endpoint</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js"&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-api-endpoint="symplissime-widget-api.php"
+     data-workspace="support-windows"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Intégration personnalisée</div>
+                <div class="option-desc">Configuration complète avec tous les paramètres</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js"&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-api-endpoint="symplissime-widget-api.php"
+     data-workspace="support-windows"
+     data-title="Assistant IA"
+     data-subtitle="Support technique"
+     data-placeholder="Votre question..."&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Intégration serveur distant</div>
+                <div class="option-desc">Widget pointant vers une API externe</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js"&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-api-endpoint="https://monsite.com/api/chat.php"
+     data-workspace="mon-workspace"
+     data-title="Mon Assistant"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Attributs disponibles</div>
+                <div class="option-desc">Liste complète des paramètres de configuration</div>
+            </div>
+            <div class="option-content">
+                <div class="attribute">
+                    <div class="attribute-name">data-api-endpoint</div>
+                    <div class="attribute-desc">URL de l'API backend (défaut: symplissime-widget-api.php)</div>
+                </div>
+                
+                <div class="attribute">
+                    <div class="attribute-name">data-workspace</div>
+                    <div class="attribute-desc">Workspace Symplissime (défaut: support-windows)</div>
+                </div>
+                
+                <div class="attribute">
+                    <div class="attribute-name">data-title</div>
+                    <div class="attribute-desc">Titre affiché dans le widget (défaut: Symplissime AI)</div>
+                </div>
+                
+                <div class="attribute">
+                    <div class="attribute-name">data-subtitle</div>
+                    <div class="attribute-desc">Sous-titre du widget (défaut: Assistant technique en ligne)</div>
+                </div>
+                
+                <div class="attribute">
+                    <div class="attribute-name">data-placeholder</div>
+                    <div class="attribute-desc">Texte de l'input (défaut: Posez votre question...)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Intégration multiple</div>
+                <div class="option-desc">Plusieurs widgets sur la même page</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js"&gt;&lt;/script&gt;
+
+&lt;!-- Widget support technique --&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-workspace="support-windows"
+     data-title="Support IT"&gt;&lt;/div&gt;
+
+&lt;!-- Widget vente --&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-workspace="commercial"
+     data-title="Aide commerciale"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Chargement asynchrone</div>
+                <div class="option-desc">Pour optimiser la vitesse de chargement de page</div>
+            </div>
+            <div class="option-content">
+                <div class="code">&lt;script src="symplissime-widget.js" async&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-workspace="support-windows"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget de test -->
+    <script src="symplissime-widget.js"></script>
+    <div class="symplissime-chat-widget" 
+         data-api-endpoint="symplissime-widget-api.php"
+         data-workspace="support-windows"
+         data-title="Test Widget"
+         data-subtitle="Widget de démonstration"
+         data-placeholder="Testez le widget...">
+    </div>
+</body>
+</html>

@@ -1,0 +1,983 @@
+/**
+ * Symplissime AI Chat Widget - Version Enhanced avec thèmes
+ * Widget de chat intégrable avec système de thèmes configurables
+ * Usage: <script src="symplissime-widget-enhanced.js"></script>
+ *        <div class="symplissime-chat-widget" data-theme="symplissime"></div>
+ */
+
+(function() {
+    'use strict';
+    
+    // Configuration des thèmes
+    const THEMES = {
+        symplissime: {
+            name: 'Symplissime Classic',
+            primary: '#48bb78',
+            primaryHover: '#38a169',
+            primaryLight: '#c6f6d5',
+            primaryDark: '#2f855a',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
+        },
+        professional: {
+            name: 'Professional Blue',
+            primary: '#4299e1',
+            primaryHover: '#3182ce',
+            primaryLight: '#bee3f8',
+            primaryDark: '#2c5aa0',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(66, 153, 225, 0.15)'
+        },
+        modern: {
+            name: 'Modern Purple',
+            primary: '#9f7aea',
+            primaryHover: '#805ad5',
+            primaryLight: '#e9d8fd',
+            primaryDark: '#6b46c1',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(159, 122, 234, 0.15)'
+        },
+        elegant: {
+            name: 'Elegant Dark',
+            primary: '#4a5568',
+            primaryHover: '#2d3748',
+            primaryLight: '#e2e8f0',
+            primaryDark: '#1a202c',
+            success: '#48bb78',
+            background: '#1a202c',
+            backgroundSecondary: '#2d3748',
+            text: '#f7fafc',
+            textSecondary: '#a0aec0',
+            border: '#4a5568',
+            shadow: '0 4px 20px rgba(74, 85, 104, 0.3)'
+        },
+        minimal: {
+            name: 'Minimal Gray',
+            primary: '#a0aec0',
+            primaryHover: '#718096',
+            primaryLight: '#f7fafc',
+            primaryDark: '#4a5568',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
+        }
+    };
+    
+    // CSS de base avec variables CSS pour les thèmes
+    const CSS_BASE = `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        .symplissime-widget-container {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
+            --primary-dark: #3730a3;
+            --success: #10b981;
+            --bg: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 20px rgba(79, 70, 229, 0.15);
+            
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2147483647;
+            font-size: 14px;
+            line-height: 1.4;
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* FAB Button */
+        .symplissime-fab {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .symplissime-fab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
+            border-radius: inherit;
+            pointer-events: none;
+        }
+        
+        .symplissime-fab:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        
+        .symplissime-fab:active {
+            transform: scale(0.95);
+        }
+        
+        .symplissime-fab-icon {
+            width: 28px;
+            height: 28px;
+            color: white;
+            transition: transform 0.2s ease;
+        }
+        
+        .symplissime-fab.closing .symplissime-fab-icon {
+            transform: rotate(45deg);
+        }
+        
+        .symplissime-fab.hidden {
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Widget Window */
+        .symplissime-widget {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 400px;
+            height: 600px;
+            background: var(--bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+        
+        .symplissime-widget.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+        
+        .symplissime-widget.minimized {
+            height: 80px;
+            transform: translateY(0) scale(1);
+        }
+        
+        .symplissime-widget.minimized .symplissime-messages,
+        .symplissime-widget.minimized .symplissime-input-container {
+            display: none;
+        }
+        
+        /* Header avec style Symplissime Classic */
+        .symplissime-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .symplissime-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+        
+        .symplissime-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .symplissime-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            position: relative;
+        }
+        
+        .symplissime-avatar::after {
+            content: '✨';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            font-size: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .symplissime-header-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 2px 0;
+        }
+        
+        .symplissime-header-info p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .symplissime-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .symplissime-control-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+        
+        .symplissime-control-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        /* Messages */
+        .symplissime-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--bg-secondary);
+            scroll-behavior: smooth;
+        }
+        
+        .symplissime-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .symplissime-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .symplissime-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        
+        .symplissime-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+        
+        .symplissime-message {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: messageSlide 0.3s ease-out;
+            position: relative;
+        }
+        
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .symplissime-message.user {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .symplissime-message.bot {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .symplissime-message.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* Quick Messages - Style Symplissime */
+        .symplissime-quick-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .symplissime-quick-message {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .symplissime-quick-message:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Typing Indicator */
+        .symplissime-typing {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            margin-right: auto;
+            max-width: 80px;
+        }
+        
+        .symplissime-typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .symplissime-typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+        
+        .symplissime-typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .symplissime-typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingBounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+        
+        /* Input avec style Symplissime */
+        .symplissime-input-container {
+            padding: 20px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .symplissime-input-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .symplissime-input {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 22px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: var(--bg);
+            color: var(--text);
+        }
+        
+        .symplissime-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        .symplissime-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .symplissime-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .symplissime-send {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .symplissime-send:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .symplissime-send:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        
+        .symplissime-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .symplissime-send-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s ease;
+        }
+        
+        .symplissime-send.sending .symplissime-send-icon {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .symplissime-widget-container {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                top: 0;
+            }
+            
+            .symplissime-fab {
+                bottom: 24px;
+                right: 24px;
+                position: fixed;
+            }
+            
+            .symplissime-widget {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                position: fixed;
+            }
+            
+            .symplissime-header {
+                border-radius: 0;
+            }
+            
+            .symplissime-input-container {
+                border-radius: 0;
+            }
+            
+            .symplissime-widget.minimized {
+                height: 80px;
+                top: auto;
+                bottom: 0;
+            }
+        }
+        
+        /* Markdown Support */
+        .symplissime-message strong {
+            font-weight: 600;
+        }
+        
+        .symplissime-message em {
+            font-style: italic;
+        }
+        
+        .symplissime-message code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+        }
+        
+        .symplissime-message.user code {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    `;
+    
+    // Icônes SVG
+    const ICONS = {
+        chat: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>`,
+        
+        close: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>`,
+        
+        minimize: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19h12v2H6z"/>
+        </svg>`,
+        
+        send: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>`
+    };
+    
+    class SymplissimeWidget {
+        constructor(element) {
+            this.element = element;
+            this.config = this.getConfig(element);
+            this.theme = this.config.theme || 'symplissime';
+            
+            this.isOpen = false;
+            this.isMinimized = false;
+            this.isProcessing = false;
+            this.sessionId = this.generateSessionId();
+            
+            this.init();
+        }
+        
+        getConfig(element) {
+            return {
+                apiEndpoint: element.dataset.apiEndpoint || 'symplissime-widget-api.php',
+                workspace: element.dataset.workspace || 'support-windows',
+                title: element.dataset.title || 'Symplissime AI',
+                subtitle: element.dataset.subtitle || 'Assistant technique en ligne',
+                placeholder: element.dataset.placeholder || 'Tapez votre message...',
+                theme: element.dataset.theme || 'symplissime',
+                autoOpen: element.dataset.autoOpen === 'true',
+                showBranding: element.dataset.showBranding !== 'false',
+                enableSound: element.dataset.enableSound === 'true',
+                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|') : []
+            };
+        }
+        
+        generateSessionId() {
+            return 'widget_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        init() {
+            this.injectStyles();
+            this.applyTheme();
+            this.createWidget();
+            this.bindEvents();
+            this.showWelcomeMessage();
+            
+            if (this.config.autoOpen) {
+                setTimeout(() => this.openWidget(), 1000);
+            }
+            
+            console.log('🤖 Symplissime Widget initialized', this.config);
+        }
+        
+        injectStyles() {
+            if (!document.getElementById('symplissime-widget-styles')) {
+                const style = document.createElement('style');
+                style.id = 'symplissime-widget-styles';
+                style.textContent = CSS_BASE;
+                document.head.appendChild(style);
+            }
+        }
+        
+        applyTheme() {
+            const themeConfig = THEMES[this.theme] || THEMES.symplissime;
+            const container = this.element;
+            
+            // Appliquer les variables CSS du thème
+            Object.entries(themeConfig).forEach(([key, value]) => {
+                if (key !== 'name') {
+                    const cssVar = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    container.style.setProperty(`--${cssVar}`, value);
+                }
+            });
+        }
+        
+        createWidget() {
+            this.element.className = 'symplissime-widget-container';
+            
+            this.element.innerHTML = `
+                <button class="symplissime-fab" type="button">
+                    <div class="symplissime-fab-icon">${ICONS.chat}</div>
+                </button>
+                
+                <div class="symplissime-widget">
+                    <div class="symplissime-header">
+                        <div class="symplissime-header-content">
+                            <div class="symplissime-avatar">S</div>
+                            <div class="symplissime-header-info">
+                                <h3>${this.config.title}</h3>
+                                <p>${this.config.subtitle}</p>
+                            </div>
+                        </div>
+                        <div class="symplissime-controls">
+                            <button class="symplissime-control-btn minimize-btn" type="button" title="Réduire">
+                                ${ICONS.minimize}
+                            </button>
+                            <button class="symplissime-control-btn close-btn" type="button" title="Fermer">
+                                ${ICONS.close}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="symplissime-messages"></div>
+                    
+                    <div class="symplissime-input-container">
+                        <form class="symplissime-input-form">
+                            <textarea class="symplissime-input" 
+                                     placeholder="${this.config.placeholder}" 
+                                     rows="1" 
+                                     maxlength="1000"></textarea>
+                            <button class="symplissime-send" type="submit">
+                                <div class="symplissime-send-icon">${ICONS.send}</div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            // Références DOM
+            this.fab = this.element.querySelector('.symplissime-fab');
+            this.widget = this.element.querySelector('.symplissime-widget');
+            this.messages = this.element.querySelector('.symplissime-messages');
+            this.input = this.element.querySelector('.symplissime-input');
+            this.sendBtn = this.element.querySelector('.symplissime-send');
+            this.form = this.element.querySelector('.symplissime-input-form');
+            
+            this.setupAutoResize();
+        }
+        
+        setupAutoResize() {
+            this.input.addEventListener('input', () => {
+                this.input.style.height = 'auto';
+                this.input.style.height = Math.min(this.input.scrollHeight, 120) + 'px';
+            });
+        }
+        
+        bindEvents() {
+            this.fab.addEventListener('click', () => this.toggleWidget());
+            
+            this.element.querySelector('.minimize-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleMinimize();
+            });
+            
+            this.element.querySelector('.close-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeWidget();
+            });
+            
+            this.element.querySelector('.symplissime-header').addEventListener('click', (e) => {
+                if (e.target.closest('.symplissime-controls')) return;
+                this.toggleMinimize();
+            });
+            
+            this.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendMessage();
+            });
+            
+            this.input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
+        
+        toggleWidget() {
+            if (this.isOpen) {
+                this.closeWidget();
+            } else {
+                this.openWidget();
+            }
+        }
+        
+        openWidget() {
+            this.isOpen = true;
+            this.widget.classList.add('open');
+            this.fab.classList.add('closing');
+            this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
+            
+            setTimeout(() => {
+                this.input.focus();
+            }, 300);
+        }
+        
+        closeWidget() {
+            this.isOpen = false;
+            this.isMinimized = false;
+            this.widget.classList.remove('open', 'minimized');
+            this.fab.classList.remove('closing');
+            this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+        }
+        
+        toggleMinimize() {
+            if (!this.isOpen) return;
+            
+            this.isMinimized = !this.isMinimized;
+            this.widget.classList.toggle('minimized', this.isMinimized);
+            
+            if (!this.isMinimized) {
+                setTimeout(() => this.input.focus(), 100);
+            }
+        }
+        
+        addMessage(content, isUser = false, isError = false) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `symplissime-message ${isUser ? 'user' : 'bot'} ${isError ? 'error' : ''}`;
+            
+            if (!isUser && !isError) {
+                content = content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
+                messageEl.innerHTML = content;
+            } else {
+                messageEl.textContent = content;
+            }
+            
+            this.messages.appendChild(messageEl);
+            this.scrollToBottom();
+        }
+        
+        addQuickMessages() {
+            if (this.config.quickMessages.length === 0) return;
+            
+            const quickContainer = document.createElement('div');
+            quickContainer.className = 'symplissime-quick-messages';
+            
+            this.config.quickMessages.forEach(message => {
+                const btn = document.createElement('button');
+                btn.className = 'symplissime-quick-message';
+                btn.textContent = message;
+                btn.addEventListener('click', () => {
+                    this.input.value = message;
+                    this.sendMessage();
+                });
+                quickContainer.appendChild(btn);
+            });
+            
+            this.messages.appendChild(quickContainer);
+            this.scrollToBottom();
+        }
+        
+        showTyping() {
+            this.hideTyping();
+            
+            const typingEl = document.createElement('div');
+            typingEl.className = 'symplissime-typing';
+            typingEl.id = 'typing-indicator';
+            typingEl.innerHTML = `
+                <div class="symplissime-typing-dots">
+                    <div class="symplissime-typing-dot"></div>
+                    <div class="symplissime-typing-dot"></div>
+                    <div class="symplissime-typing-dot"></div>
+                </div>
+            `;
+            
+            this.messages.appendChild(typingEl);
+            this.scrollToBottom();
+        }
+        
+        hideTyping() {
+            const typing = this.messages.querySelector('#typing-indicator');
+            if (typing) typing.remove();
+        }
+        
+        scrollToBottom() {
+            requestAnimationFrame(() => {
+                this.messages.scrollTop = this.messages.scrollHeight;
+            });
+        }
+        
+        async sendMessage() {
+            const message = this.input.value.trim();
+            if (!message || this.isProcessing) return;
+            
+            this.addMessage(message, true);
+            this.input.value = '';
+            this.input.style.height = 'auto';
+            this.setProcessing(true);
+            this.showTyping();
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'chat');
+                formData.append('message', message);
+                formData.append('workspace', this.config.workspace);
+                formData.append('sessionId', this.sessionId);
+                
+                const response = await fetch(this.config.apiEndpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                this.hideTyping();
+                
+                if (data.error) {
+                    this.addMessage(`❌ ${data.error}`, false, true);
+                } else if (data.success && data.message) {
+                    this.addMessage(data.message, false);
+                } else {
+                    this.addMessage('❌ Aucune réponse reçue du serveur', false, true);
+                }
+                
+            } catch (error) {
+                this.hideTyping();
+                this.addMessage(`❌ Erreur de connexion: ${error.message}`, false, true);
+                console.error('Widget error:', error);
+            }
+            
+            this.setProcessing(false);
+        }
+        
+        setProcessing(processing) {
+            this.isProcessing = processing;
+            this.input.disabled = processing;
+            this.sendBtn.disabled = processing;
+            this.sendBtn.classList.toggle('sending', processing);
+        }
+        
+        showWelcomeMessage() {
+            setTimeout(() => {
+                this.addMessage(`👋 **Bonjour !** Bienvenue chez ${this.config.title}.
+
+Comment puis-je vous aider aujourd'hui ?`);
+                
+                if (this.config.quickMessages.length > 0) {
+                    setTimeout(() => {
+                        this.addQuickMessages();
+                    }, 500);
+                }
+            }, 1000);
+        }
+    }
+    
+    // Auto-initialization
+    function initializeWidgets() {
+        const widgets = document.querySelectorAll('.symplissime-chat-widget:not([data-widget-initialized])');
+        
+        widgets.forEach(element => {
+            element.setAttribute('data-widget-initialized', 'true');
+            new SymplissimeWidget(element);
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeWidgets);
+    } else {
+        setTimeout(initializeWidgets, 0);
+    }
+    
+    if (typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(initializeWidgets);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
+    }
+    
+    window.SymplissimeWidget = SymplissimeWidget;
+    
+})();

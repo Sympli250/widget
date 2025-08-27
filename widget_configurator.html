@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget Symplissime AI Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #fff, #f0f9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .config-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .config-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .demo-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-section h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .widget-demo {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .widget-demo h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .widget-demo p {
+            opacity: 0.8;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .widget-demo .features {
+            list-style: none;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .widget-demo .features li {
+            padding: 5px 0;
+            opacity: 0.9;
+        }
+
+        .widget-demo .features li::before {
+            content: "✨";
+            margin-right: 10px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+        }
+
+        .instructions h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .instructions ol {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .instructions li {
+            margin: 15px 0;
+            padding-left: 10px;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .status-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .status-info h4 {
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .demo-section {
+                padding: 25px 20px;
+            }
+            
+            body {
+                padding: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Widget Symplissime AI Enhanced</h1>
+            <p>Test des nouvelles fonctionnalités : thèmes, formes, positions et photos de profil</p>
+            
+            <a href="configurateur-widget.php" class="config-link" target="_blank">
+                🛠️ Ouvrir le Configurateur
+            </a>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Nouvelles fonctionnalités</h2>
+            
+            <div class="widgets-grid">
+                <div class="widget-demo">
+                    <h3>🎨 5 Thèmes</h3>
+                    <p>Thèmes personnalisables avec couleurs et styles distincts</p>
+                    <ul class="features">
+                        <li>Symplissime Classic (Vert)</li>
+                        <li>Professional Blue</li>
+                        <li>Modern Purple</li>
+                        <li>Elegant Dark</li>
+                        <li>Minimal Gray</li>
+                    </ul>
+                </div>
+                
+                <div class="widget-demo">
+                    <h3>🔶 5 Formes</h3>
+                    <p>Formes personnalisables pour l'icône du widget</p>
+                    <ul class="features">
+                        <li>Cercle (par défaut)</li>
+                        <li>Carré arrondi</li>
+                        <li>Carré</li>
+                        <li>Hexagone</li>
+                        <li>Cœur</li>
+                    </ul>
+                </div>
+                
+                <div class="widget-demo">
+                    <h3>📍 6 Positions</h3>
+                    <p>Positionnement flexible sur l'écran</p>
+                    <ul class="features">
+                        <li>Bas droite</li>
+                        <li>Bas gauche</li>
+                        <li>Haut droite</li>
+                        <li>Haut gauche</li>
+                        <li>Milieu droite</li>
+                        <li>Milieu gauche</li>
+                    </ul>
+                </div>
+                
+                <div class="widget-demo">
+                    <h3>👤 Photo de Profil</h3>
+                    <p>Avatar personnalisable via upload ou URL</p>
+                    <ul class="features">
+                        <li>Upload d'image local</li>
+                        <li>URL d'image externe</li>
+                        <li>Format JPG, PNG, GIF, WebP</li>
+                        <li>Redimensionnement automatique</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Comment utiliser</h3>
+            <ol>
+                <li><strong>Ouvrez le configurateur</strong> (lien ci-dessus) dans un nouvel onglet</li>
+                <li><strong>Personnalisez</strong> votre widget : thème, forme, position, photo</li>
+                <li><strong>Copiez le code généré</strong> automatiquement</li>
+                <li><strong>Intégrez</strong> le code sur votre site web</li>
+                <li><strong>Testez</strong> le widget avec vos visiteurs</li>
+            </ol>
+        </div>
+
+        <div class="status-info">
+            <h4>✅ Statut des fichiers</h4>
+            <p>Le widget ci-dessous utilise les fichiers :</p>
+            
+            <div class="code-block">
+📁 Fichiers requis :
+├── symplissime-widget-enhanced.js  ← Widget avec toutes les options
+├── symplissime-widget-api.php      ← Backend API (inchangé)
+└── configurateur-widget.php        ← Configurateur PHP
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 Widget de démonstration</h2>
+            <p style="text-align: center; margin-bottom: 30px;">
+                Le widget ci-dessous utilise la configuration par défaut.<br>
+                <strong>Regardez en bas à droite</strong> pour tester !
+            </p>
+            
+            <div class="code-block">
+&lt;!-- Configuration par défaut --&gt;
+&lt;script src="symplissime-widget-enhanced.js"&gt;&lt;/script&gt;
+&lt;div class="symplissime-chat-widget" 
+     data-theme="symplissime"
+     data-bubble-shape="circle"
+     data-bubble-position="bottom-right"
+     data-title="Symplissime AI"
+     data-quick-messages="Qu'est-ce que Symplissime ?|Combien coûte Symplissime ?|À qui s'adresse Symplissime ?"&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget de test avec configuration par défaut -->
+    <script src="symplissime-widget-enhanced.js"></script>
+    <div class="symplissime-chat-widget" 
+         data-api-endpoint="symplissime-widget-api.php"
+         data-workspace="support-windows"
+         data-theme="symplissime"
+         data-bubble-shape="circle"
+         data-bubble-position="bottom-right"
+         data-title="Symplissime AI"
+         data-subtitle="Assistant technique en ligne"
+         data-placeholder="Posez votre question..."
+         data-quick-messages="Qu'est-ce que Symplissime ?|Combien coûte Symplissime ?|À qui s'adresse Symplissime ?">
+    </div>
+</body>
+</html>
