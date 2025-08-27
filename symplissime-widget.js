@@ -1575,7 +1575,7 @@
     }
 
     let observer;
-    const observedContainers = new WeakSet();
+    let observedContainers = new WeakSet();
     let resetController;
     const DEBOUNCE_DELAY = 500;
 
@@ -1607,9 +1607,44 @@
     }
 
     function handleMutations(mutations) {
-        const external = mutations.some(
-            m => !m.target.closest('.symplissime-chat-widget')
-        );
+        let external = false;
+        let reconnect = false;
+
+        mutations.forEach(mutation => {
+            mutation.removedNodes.forEach(node => {
+                if (node.nodeType !== 1) return;
+                const widgets = node.matches?.('.symplissime-chat-widget')
+                    ? [node]
+                    : node.querySelectorAll
+                        ? node.querySelectorAll('.symplissime-chat-widget')
+                        : [];
+                widgets.forEach(widget => {
+                    const instance = widgetInstances.get(widget);
+                    if (instance && typeof instance.destroy === 'function') {
+                        instance.destroy();
+                    } else {
+                        widgetInstances.delete(widget);
+                    }
+                    const container = getObservationRoot(widget);
+                    if (container && observedContainers.has(container) && !container.isConnected) {
+                        reconnect = true;
+                    }
+                });
+            });
+
+            if (!mutation.target.closest('.symplissime-chat-widget')) {
+                external = true;
+            }
+        });
+
+        if (reconnect && observer) {
+            observer.disconnect();
+            observedContainers = new WeakSet();
+            document
+                .querySelectorAll('.symplissime-chat-widget')
+                .forEach(widget => observeContainer(getObservationRoot(widget)));
+        }
+
         if (external) scheduleInitialize();
     }
 

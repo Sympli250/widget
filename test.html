@@ -229,8 +229,20 @@
             </div>
             <div class="option-content">
                 <div class="code">&lt;script src="symplissime-widget.js" async&gt;&lt;/script&gt;
-&lt;div class="symplissime-chat-widget" 
+&lt;div class="symplissime-chat-widget"
      data-workspace="support-windows"&gt;&lt;/div&gt;</div>
+            </div>
+        </div>
+
+        <div class="option">
+            <div class="option-header">
+                <div class="option-title">Test dynamique</div>
+                <div class="option-desc">Ajouter et supprimer un widget pour vérifier l'absence de fuites mémoire</div>
+            </div>
+            <div class="option-content">
+                <button id="add-widget">Ajouter un widget</button>
+                <button id="remove-widget">Supprimer le widget</button>
+                <div id="dynamic-container" style="margin-top:20px;"></div>
             </div>
         </div>
     </div>
@@ -245,5 +257,22 @@
          data-placeholder="Testez le widget..."
          data-quick-messages="Qu'est-ce que Symplissime ?|Combien coûte Symplissime ?|A qui s'adresse Symplissime ?">
     </div>
+    <script>
+        document.getElementById('add-widget').addEventListener('click', () => {
+            const container = document.getElementById('dynamic-container');
+            if (!container.querySelector('.symplissime-chat-widget')) {
+                const div = document.createElement('div');
+                div.className = 'symplissime-chat-widget';
+                div.dataset.apiEndpoint = 'symplissime-widget-api.php';
+                div.dataset.workspace = 'support-windows';
+                container.appendChild(div);
+            }
+        });
+
+        document.getElementById('remove-widget').addEventListener('click', () => {
+            const widget = document.querySelector('#dynamic-container .symplissime-chat-widget');
+            if (widget) widget.remove();
+        });
+    </script>
 </body>
 </html>
