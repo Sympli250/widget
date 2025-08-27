@@ -380,7 +380,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
           widget.dataset.theme = data.get('theme');
-          widget.dataset.quickMessages = data.getAll('quick_messages[]').map(q => q.trim()).filter(Boolean).join('|');
+          widget.dataset.quickMessages = getQuickRepliesString(data);
           preview.appendChild(widget);
           if (typeof initializeWidgets === 'function') {
               initializeWidgets();
