@@ -10,6 +10,7 @@
 
     const SymplissimeWidgetNS = {};
     const widgetInstances = new WeakMap();
+    const SESSION_STORAGE_KEY = 'symplissime_widget_session_id';
 
     function decodeHTML(str) {
         const txt = document.createElement('textarea');
@@ -888,7 +889,11 @@
             this.stateLock = false;
             this.pendingState = null;
             this.stateTimeout = null;
-            this.sessionId = null; // sera fourni par le serveur
+            try {
+                this.sessionId = localStorage.getItem(SESSION_STORAGE_KEY) || null;
+            } catch (e) {
+                this.sessionId = null;
+            }
             this.unreadCount = 0;
             this.history = [];
 
@@ -1440,6 +1445,9 @@
                 const data = await response.json();
                 if (data.sessionId) {
                     this.sessionId = data.sessionId;
+                    try {
+                        localStorage.setItem(SESSION_STORAGE_KEY, this.sessionId);
+                    } catch (e) { /* ignore */ }
                 }
                 this.hideTyping();
                 
