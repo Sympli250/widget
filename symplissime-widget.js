@@ -34,24 +34,12 @@
     }
 
     function isValidUrl(url) {
-        if (typeof url !== 'string') return false;
-        url = url.trim();
-        if (!url) return false;
-        const absolute = /^(https?:\/\/)[^\s/$.?#].*/i;
-        const relative = /^[\.\w\/-]+$/;
         try {
-            if (absolute.test(url)) {
-                new URL(url);
-                return true;
-            }
-            if (relative.test(url)) {
-                new URL(url, window.location.origin);
-                return true;
-            }
-        } catch (e) {
+            new URL(url, window.location.origin);
+            return /^https?:\/\//.test(url) || /^[\w\/\-]+$/.test(url);
+        } catch {
             return false;
         }
-        return false;
     }
 
     function isValidEmail(email) {
@@ -64,6 +52,13 @@
     function isValidHex(color) {
         if (typeof color !== 'string') return false;
         return /^#[0-9A-Fa-f]{6}$/.test(color.trim());
+    }
+
+    function sanitizeHTML(str) {
+        return str
+            .replace(/<script[^>]*>.*?<\/script>/gi, '')
+            .replace(/javascript:/gi, '')
+            .replace(/on\w+=/gi, '');
     }
 
     // Utility to test for feature support
@@ -89,6 +84,11 @@
                     });
                 }
 
+                xhr.timeout = options.timeout || 15000;
+                if (options.signal) {
+                    options.signal.addEventListener('abort', () => xhr.abort());
+                }
+
                 xhr.onload = function() {
                     const response = {
                         ok: xhr.status >= 200 && xhr.status < 300,
@@ -104,6 +104,10 @@
                     reject(new TypeError('Network request failed'));
                 };
 
+                xhr.ontimeout = function() {
+                    reject(new TypeError('Network request failed'));
+                };
+
                 if (options.body) {
                     xhr.send(options.body);
                 } else {
@@ -116,166 +120,166 @@
     }
     
     // Thèmes chargés dynamiquement depuis un fichier JSON
-    let THEMES = {};
-    const DEFAULT_THEMES = {
-        symplissime: {
-            name: 'Symplissime Classic',
-            primary: '#48bb78',
-            primaryHover: '#38a169',
-            primaryLight: '#c6f6d5',
-            primaryDark: '#2f855a',
-            success: '#48bb78',
-            background: '#ffffff',
-            backgroundSecondary: '#f7fafc',
-            text: '#1a202c',
-            textSecondary: '#718096',
-            border: '#e2e8f0',
-            shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
-        },
-        professional: {
-            name: 'Professional Blue',
-            primary: '#4299e1',
-            primaryHover: '#3182ce',
-            primaryLight: '#bee3f8',
-            primaryDark: '#2c5aa0',
-            success: '#48bb78',
-            background: '#ffffff',
-            backgroundSecondary: '#f7fafc',
-            text: '#1a202c',
-            textSecondary: '#718096',
-            border: '#e2e8f0',
-            shadow: '0 4px 20px rgba(66, 153, 225, 0.15)'
-        },
-        modern: {
-            name: 'Modern Purple',
-            primary: '#9f7aea',
-            primaryHover: '#805ad5',
-            primaryLight: '#e9d8fd',
-            primaryDark: '#6b46c1',
-            success: '#48bb78',
-            background: '#ffffff',
-            backgroundSecondary: '#f7fafc',
-            text: '#1a202c',
-            textSecondary: '#718096',
-            border: '#e2e8f0',
-            shadow: '0 4px 20px rgba(159, 122, 234, 0.15)'
-        },
-        elegant: {
-            name: 'Elegant Dark',
-            primary: '#4a5568',
-            primaryHover: '#2d3748',
-            primaryLight: '#e2e8f0',
-            primaryDark: '#1a202c',
-            success: '#48bb78',
-            background: '#1a202c',
-            backgroundSecondary: '#2d3748',
-            text: '#f7fafc',
-            textSecondary: '#a0aec0',
-            border: '#4a5568',
-            shadow: '0 4px 20px rgba(74, 85, 104, 0.3)'
+    const SymplissimeThemes = {
+        cache: {},
+        defaults: {
+            symplissime: {
+                name: 'Symplissime Classic',
+                primary: '#48bb78',
+                primaryHover: '#38a169',
+                primaryLight: '#c6f6d5',
+                primaryDark: '#2f855a',
+                success: '#48bb78',
+                background: '#ffffff',
+                backgroundSecondary: '#f7fafc',
+                text: '#1a202c',
+                textSecondary: '#718096',
+                border: '#e2e8f0',
+                shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
+            },
+            professional: {
+                name: 'Professional Blue',
+                primary: '#4299e1',
+                primaryHover: '#3182ce',
+                primaryLight: '#bee3f8',
+                primaryDark: '#2c5aa0',
+                success: '#48bb78',
+                background: '#ffffff',
+                backgroundSecondary: '#f7fafc',
+                text: '#1a202c',
+                textSecondary: '#718096',
+                border: '#e2e8f0',
+                shadow: '0 4px 20px rgba(66, 153, 225, 0.15)'
+            },
+            modern: {
+                name: 'Modern Purple',
+                primary: '#9f7aea',
+                primaryHover: '#805ad5',
+                primaryLight: '#e9d8fd',
+                primaryDark: '#6b46c1',
+                success: '#48bb78',
+                background: '#ffffff',
+                backgroundSecondary: '#f7fafc',
+                text: '#1a202c',
+                textSecondary: '#718096',
+                border: '#e2e8f0',
+                shadow: '0 4px 20px rgba(159, 122, 234, 0.15)'
+            },
+            elegant: {
+                name: 'Elegant Dark',
+                primary: '#4a5568',
+                primaryHover: '#2d3748',
+                primaryLight: '#e2e8f0',
+                primaryDark: '#1a202c',
+                success: '#48bb78',
+                background: '#1a202c',
+                backgroundSecondary: '#2d3748',
+                text: '#f7fafc',
+                textSecondary: '#a0aec0',
+                border: '#4a5568',
+                shadow: '0 4px 20px rgba(74, 85, 104, 0.3)'
+            },
+            minimal: {
+                name: 'Minimal Gray',
+                primary: '#a0aec0',
+                primaryHover: '#718096',
+                primaryLight: '#f7fafc',
+                primaryDark: '#4a5568',
+                success: '#48bb78',
+                background: '#ffffff',
+                backgroundSecondary: '#f7fafc',
+                text: '#1a202c',
+                textSecondary: '#718096',
+                border: '#e2e8f0',
+                shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
+            }
         },
         minimal: {
             name: 'Minimal Gray',
-            primary: '#a0aec0',
-            primaryHover: '#718096',
-            primaryLight: '#f7fafc',
-            primaryDark: '#4a5568',
-            success: '#48bb78',
-            background: '#ffffff',
-            backgroundSecondary: '#f7fafc',
-            text: '#1a202c',
-            textSecondary: '#718096',
-            border: '#e2e8f0',
-            shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
-        }
-    };
-
-    const MINIMAL_THEME = {
-        name: 'Minimal Gray',
-        primary: '#a0aec0',
-        primaryHover: '#718096',
-        primaryLight: '#f7fafc',
-        primaryDark: '#4a5568',
-        success: '#48bb78',
-        background: '#ffffff',
-        backgroundSecondary: '#f7fafc',
-        text: '#1a202c',
-        textSecondary: '#718096',
-        border: '#e2e8f0',
-        shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
-    };
-
-    const scriptSrc = document.currentScript ? document.currentScript.src : null;
-    const themesUrl = scriptSrc ? new URL('widget-themes.json', scriptSrc) : 'widget-themes.json';
-
-    async function loadThemes() {
-        const CACHE_KEY = 'symplissime_widget_themes_v1';
-        try {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (cached) {
-                let parsed;
-                try {
-                    parsed = JSON.parse(cached);
-                } catch (parseErr) {
-                    console.warn('Cache themes corrompu, suppression:', parseErr);
-                    localStorage.removeItem(CACHE_KEY);
+            primary: '#48bb78',
+            background: '#ffffff'
+        },
+        async load() {
+            const CACHE_KEY = 'symplissime_widget_themes_v1';
+            if (Object.keys(this.cache).length) return this.cache;
+            const scriptSrc = document.currentScript ? document.currentScript.src : null;
+            const themesUrl = scriptSrc ? new URL('widget-themes.json', scriptSrc) : 'widget-themes.json';
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(cached);
+                    } catch (parseErr) {
+                        console.warn('Cache themes corrompu, suppression:', parseErr);
+                        localStorage.removeItem(CACHE_KEY);
+                    }
+                    if (
+                        parsed &&
+                        typeof parsed.timestamp === 'number' &&
+                        parsed.data &&
+                        typeof parsed.data === 'object' &&
+                        Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000
+                    ) {
+                        this.cache = parsed.data;
+                        return this.cache;
+                    }
                 }
-                if (
-                    parsed &&
-                    typeof parsed.timestamp === 'number' &&
-                    parsed.data &&
-                    typeof parsed.data === 'object' &&
-                    Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000
-                ) {
-                    THEMES = parsed.data;
-                    return THEMES;
-                }
+            } catch (e) {
+                console.warn('Cache themes inaccessible:', e);
             }
-        } catch (e) {
-            // localStorage peut échouer (mode privé, etc.)
-            console.warn('Cache themes inaccessible:', e);
-        }
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        try {
-            const response = await fetchWithFallback(themesUrl, { signal: controller.signal });
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
-            if (data && typeof data === 'object') {
-                THEMES = data;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            try {
+                const response = await fetchWithFallback(themesUrl, { signal: controller.signal });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                if (data && typeof data === 'object') {
+                    this.cache = data;
+                    try {
+                        localStorage.setItem(
+                            CACHE_KEY,
+                            JSON.stringify({ data, timestamp: Date.now() })
+                        );
+                    } catch (e) {
+                        /* ignore cache errors */
+                    }
+                    return this.cache;
+                }
+                throw new Error('Données de thèmes invalides');
+            } catch (err) {
+                console.error('Erreur de chargement des thèmes:', err);
+                this.cache = { ...this.defaults };
                 try {
                     localStorage.setItem(
                         CACHE_KEY,
-                        JSON.stringify({ data, timestamp: Date.now() })
+                        JSON.stringify({ data: this.cache, timestamp: Date.now() })
                     );
                 } catch (e) {
                     /* ignore cache errors */
                 }
-                return THEMES;
+                if (!this.cache || Object.keys(this.cache).length === 0) {
+                    this.cache = { minimal: this.minimal };
+                }
+            } finally {
+                clearTimeout(timeout);
             }
-            throw new Error('Données de thèmes invalides');
-        } catch (err) {
-            console.error('Erreur de chargement des thèmes:', err);
-            THEMES = { ...DEFAULT_THEMES };
-            try {
-                localStorage.setItem(
-                    CACHE_KEY,
-                    JSON.stringify({ data: THEMES, timestamp: Date.now() })
-                );
-            } catch (e) {
-                /* ignore cache errors */
-            }
-            if (!THEMES || Object.keys(THEMES).length === 0) {
-                THEMES = { minimal: MINIMAL_THEME };
-            }
-        } finally {
-            clearTimeout(timeout);
+            return this.cache;
         }
-        return THEMES;
+    };
+
+    class ThemeCache {
+        static themes = null;
+        static async getThemes() {
+            if (!ThemeCache.themes) {
+                ThemeCache.themes = await SymplissimeThemes.load();
+            }
+            return ThemeCache.themes;
+        }
     }
 
-    const themesLoaded = loadThemes();
+    const themesLoaded = ThemeCache.getThemes();
     
     // CSS de base avec variables CSS pour les thèmes
     const CSS_BASE = `
@@ -875,11 +879,81 @@
         fr: { minimize: 'Réduire', close: 'Fermer', placeholder: 'Tapez votre message...' },
         en: { minimize: 'Minimize', close: 'Close', placeholder: 'Type your message...' }
     };
-    
-    class SymplissimeWidget {
-        constructor(element) {
+
+    function getConfig(element) {
+        const apiEndpoint = isValidUrl(element.dataset.apiEndpoint) ? element.dataset.apiEndpoint : 'symplissime-widget-api.php';
+        const workspace = /^[\w-]{1,50}$/.test(element.dataset.workspace || '') ? element.dataset.workspace : 'support-windows';
+        const title = (element.dataset.title || 'Symplissime AI').trim();
+        const subtitle = (element.dataset.subtitle || 'Assistant technique en ligne').trim();
+        const placeholder = (element.dataset.placeholder || 'Tapez votre message...').trim();
+        const theme = /^[\w-]{1,30}$/.test(element.dataset.theme || '') ? element.dataset.theme : 'symplissime';
+        const accentColor = isValidHex(element.dataset.accentColor) ? element.dataset.accentColor : '';
+        const fontChoices = ['default', 'sans-serif', 'serif', 'monospace'];
+        const font = fontChoices.includes(element.dataset.font) ? element.dataset.font : 'default';
+        const quickMessages = element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [];
+        const welcomeMessage = element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '';
+        const greetingModes = ['bubble_immediate', 'bubble_delayed', 'window'];
+        const greetingMode = greetingModes.includes(element.dataset.greetingMode) ? element.dataset.greetingMode : 'bubble_immediate';
+        const parsedDelay = parseInt(element.dataset.greetingDelay, 10);
+        const greetingDelay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 30;
+        const displayName = (element.dataset.displayName || title || 'Symplissime AI').trim();
+        const profilePicture = isValidUrl(element.dataset.profilePicture) ? element.dataset.profilePicture : '';
+        const bubblePosition = ['left', 'right'].includes(element.dataset.bubblePosition) ? element.dataset.bubblePosition : 'right';
+        const ownerEmail = isValidEmail(element.dataset.ownerEmail) ? element.dataset.ownerEmail : '';
+        const footerText = (element.dataset.footerText || '').trim();
+        const language = /^[a-z]{2}$/i.test(element.dataset.language || '') ? element.dataset.language : 'fr';
+        const timeZone = (element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone).trim();
+
+        return {
+            apiEndpoint,
+            workspace,
+            title,
+            subtitle,
+            placeholder,
+            theme,
+            accentColor,
+            font,
+            autoOpen: element.dataset.autoOpen === 'true',
+            showBranding: element.dataset.showBranding !== 'false',
+            enableSound: element.dataset.enableSound === 'true',
+            quickMessages,
+            welcomeMessage,
+            greetingMode,
+            greetingDelay,
+            displayName,
+            profilePicture,
+            bubbleIcon: element.dataset.bubbleIcon !== 'false',
+            bubblePosition,
+            sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
+            ownerEmail,
+            footerEnabled: element.dataset.footerEnabled === 'true',
+            footerText,
+            language,
+            timeZone
+        };
+    }
+
+    class WidgetAPI {
+        constructor(endpoint) {
+            this.endpoint = endpoint;
+        }
+
+        async chat(message, sessionId, workspace) {
+            const formData = new FormData();
+            formData.append('action', 'chat');
+            formData.append('message', message);
+            if (sessionId) formData.append('sessionId', sessionId);
+            if (workspace) formData.append('workspace', workspace);
+            const response = await fetchWithFallback(this.endpoint, { method: 'POST', body: formData });
+            return response.json();
+        }
+    }
+
+    class WidgetUI {
+        constructor(element, config, api) {
             this.element = element;
-            this.config = this.getConfig(element);
+            this.config = config;
+            this.api = api;
             this.theme = this.config.theme || 'symplissime';
 
             this.isOpen = false;
@@ -890,69 +964,26 @@
             this.pendingState = null;
             this.stateTimeout = null;
             try {
-                this.sessionId = localStorage.getItem(SESSION_STORAGE_KEY) || null;
+                this.sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+                if (!this.sessionId) {
+                    this.sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+                    localStorage.setItem(SESSION_STORAGE_KEY, this.sessionId);
+                }
             } catch (e) {
-                this.sessionId = null;
+                this.sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
             }
             this.unreadCount = 0;
             this.history = [];
+            this.listeners = [];
 
             this.init();
         }
 
-        getConfig(element) {
-            const apiEndpoint = isValidUrl(element.dataset.apiEndpoint) ? element.dataset.apiEndpoint : 'symplissime-widget-api.php';
-            const workspace = /^[\w-]{1,50}$/.test(element.dataset.workspace || '') ? element.dataset.workspace : 'support-windows';
-            const title = (element.dataset.title || 'Symplissime AI').trim();
-            const subtitle = (element.dataset.subtitle || 'Assistant technique en ligne').trim();
-            const placeholder = (element.dataset.placeholder || 'Tapez votre message...').trim();
-            const theme = /^[\w-]{1,30}$/.test(element.dataset.theme || '') ? element.dataset.theme : 'symplissime';
-            const accentColor = isValidHex(element.dataset.accentColor) ? element.dataset.accentColor : '';
-            const fontChoices = ['default', 'sans-serif', 'serif', 'monospace'];
-            const font = fontChoices.includes(element.dataset.font) ? element.dataset.font : 'default';
-            const quickMessages = element.dataset.quickMessages ? element.dataset.quickMessages.split('|').map(decodeHTML) : [];
-            const welcomeMessage = element.dataset.welcomeMessage ? decodeHTML(element.dataset.welcomeMessage).replace(/\\n/g, '\n') : '';
-            const greetingModes = ['bubble_immediate', 'bubble_delayed', 'window'];
-            const greetingMode = greetingModes.includes(element.dataset.greetingMode) ? element.dataset.greetingMode : 'bubble_immediate';
-            const parsedDelay = parseInt(element.dataset.greetingDelay, 10);
-            const greetingDelay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 30;
-            const displayName = (element.dataset.displayName || title || 'Symplissime AI').trim();
-            const profilePicture = isValidUrl(element.dataset.profilePicture) ? element.dataset.profilePicture : '';
-            const bubblePosition = ['left', 'right'].includes(element.dataset.bubblePosition) ? element.dataset.bubblePosition : 'right';
-            const ownerEmail = isValidEmail(element.dataset.ownerEmail) ? element.dataset.ownerEmail : '';
-            const footerText = (element.dataset.footerText || '').trim();
-            const language = /^[a-z]{2}$/i.test(element.dataset.language || '') ? element.dataset.language : 'fr';
-            const timeZone = (element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone).trim();
-
-            return {
-                apiEndpoint,
-                workspace,
-                title,
-                subtitle,
-                placeholder,
-                theme,
-                accentColor,
-                font,
-                autoOpen: element.dataset.autoOpen === 'true',
-                showBranding: element.dataset.showBranding !== 'false',
-                enableSound: element.dataset.enableSound === 'true',
-                quickMessages,
-                welcomeMessage,
-                greetingMode,
-                greetingDelay,
-                displayName,
-                profilePicture,
-                bubbleIcon: element.dataset.bubbleIcon !== 'false',
-                bubblePosition,
-                sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
-                ownerEmail,
-                footerEnabled: element.dataset.footerEnabled === 'true',
-                footerText,
-                language,
-                timeZone
-            };
+        addListener(el, type, handler) {
+            el.addEventListener(type, handler);
+            this.listeners.push({ el, type, handler });
         }
-        
+
         async init() {
             await themesLoaded;
             this.injectStyles();
@@ -985,7 +1016,7 @@
         }
         
         loadTheme(name) {
-            const themeConfig = THEMES[name] || THEMES.symplissime || {};
+            const themeConfig = SymplissimeThemes.cache[name] || SymplissimeThemes.cache.symplissime || {};
             const container = this.element;
 
             Object.entries(themeConfig).forEach(([key, value]) => {
@@ -1078,6 +1109,8 @@
             this.form = this.element.querySelector('.symplissime-input-form');
             this.badge = this.element.querySelector('.symplissime-fab-badge');
             this.avatar = this.element.querySelector('.symplissime-avatar');
+            this.input.setAttribute('aria-describedby', 'symplissime-input-desc');
+            this.messages.setAttribute('aria-live', 'polite');
             if (this.config.profilePicture) {
                 this.avatar.innerHTML = `<img src="${this.config.profilePicture}" alt="" style="width:32px;height:32px;border-radius:50%;">`;
             } else {
@@ -1106,80 +1139,84 @@
         }
         
         setupAutoResize() {
-            this.input.addEventListener('input', () => {
+            const handler = () => {
                 this.input.style.height = 'auto';
                 this.input.style.height = Math.min(this.input.scrollHeight, 120) + 'px';
-            });
+            };
+            this.addListener(this.input, 'input', handler);
         }
-        
+
         bindEvents() {
             const addKeyboard = (btn, handler) => {
                 btn.setAttribute('tabindex', '0');
-                btn.addEventListener('keydown', (e) => {
+                const keyHandler = (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         handler(e);
                     }
-                });
+                };
+                this.addListener(btn, 'keydown', keyHandler);
             };
 
-            this.fab.addEventListener('click', () => this.toggleWidget());
-            addKeyboard(this.fab, () => this.toggleWidget());
+            const fabClick = () => this.toggleWidget();
+            this.addListener(this.fab, 'click', fabClick);
+            addKeyboard(this.fab, fabClick);
 
             const minimizeBtn = this.element.querySelector('.minimize-btn');
-            minimizeBtn.addEventListener('click', (e) => {
+            const minimizeClick = (e) => {
                 e.stopPropagation();
                 this.toggleMinimize();
-            });
-            addKeyboard(minimizeBtn, (e) => {
-                e.stopPropagation();
-                this.toggleMinimize();
-            });
+            };
+            this.addListener(minimizeBtn, 'click', minimizeClick);
+            addKeyboard(minimizeBtn, minimizeClick);
 
             const closeBtn = this.element.querySelector('.close-btn');
-            closeBtn.addEventListener('click', (e) => {
+            const closeClick = (e) => {
                 e.stopPropagation();
                 this.closeWidget();
-            });
-            addKeyboard(closeBtn, (e) => {
-                e.stopPropagation();
-                this.closeWidget();
-            });
+            };
+            this.addListener(closeBtn, 'click', closeClick);
+            addKeyboard(closeBtn, closeClick);
 
-            document.addEventListener('keydown', (e) => {
+            const escHandler = (e) => {
                 if (e.key === 'Escape' && this.isOpen) {
                     this.closeWidget();
                 }
-            });
-            
+            };
+            this.addListener(document, 'keydown', escHandler);
+
             const header = this.element.querySelector('.symplissime-header');
             header.setAttribute('tabindex', '0');
-            header.addEventListener('click', (e) => {
+            const headerClick = (e) => {
                 if (e.target.closest('.symplissime-controls')) return;
                 this.toggleMinimize();
-            });
-            header.addEventListener('keydown', (e) => {
+            };
+            const headerKey = (e) => {
                 if (e.target.closest('.symplissime-controls')) return;
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     this.toggleMinimize();
                 }
-            });
-            
-            this.form.addEventListener('submit', (e) => {
+            };
+            this.addListener(header, 'click', headerClick);
+            this.addListener(header, 'keydown', headerKey);
+
+            const submitHandler = (e) => {
                 e.preventDefault();
                 this.sendMessage();
-            });
+            };
+            this.addListener(this.form, 'submit', submitHandler);
 
             const sendBtn = this.element.querySelector('.symplissime-send');
             addKeyboard(sendBtn, () => this.form.dispatchEvent(new Event('submit', { cancelable: true })));
-            
-            this.input.addEventListener('keydown', (e) => {
+
+            const inputKeydown = (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     this.sendMessage();
                 }
-            });
+            };
+            this.addListener(this.input, 'keydown', inputKeydown);
         }
         
         toggleWidget() {
@@ -1191,6 +1228,9 @@
         }
 
         changeState(newState) {
+            clearTimeout(this.stateTimeout);
+            this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
+
             const transitions = {
                 closed: ['open'],
                 open: ['closed', 'minimized'],
@@ -1204,7 +1244,6 @@
             if (!transitions[this.state].includes(newState)) return;
 
             this.stateLock = true;
-            clearTimeout(this.stateTimeout);
 
             const releaseLock = () => {
                 this.stateLock = false;
@@ -1214,16 +1253,6 @@
                     this.changeState(next);
                 }
             };
-
-            // Safety timeout to avoid stuck states
-            this.stateTimeout = setTimeout(() => {
-                if (this.stateLock) {
-                    releaseLock();
-                    if (this.state !== 'closed') {
-                        this.changeState('closed');
-                    }
-                }
-            }, 2000);
 
             this.state = newState;
             this.isOpen = newState !== 'closed';
@@ -1268,6 +1297,20 @@
             setTimeout(releaseLock, 300);
         }
 
+        forceState(newState) {
+            this.stateLock = false;
+            this.pendingState = null;
+            this.state = newState;
+            this.isOpen = newState !== 'closed';
+            this.isMinimized = newState === 'minimized';
+            if (newState === 'closed') {
+                this.widget.classList.remove('open', 'minimized');
+                this.fab.classList.remove('closing');
+                this.fab.setAttribute('aria-expanded', 'false');
+                this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+            }
+        }
+
         openWidget() {
             this.changeState('open');
         }
@@ -1297,11 +1340,13 @@
             messageEl.className = `symplissime-message ${isUser ? 'user' : 'bot'} ${isError ? 'error' : ''}`;
             
             if (!isUser && !isError) {
-                content = content
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/`(.*?)`/g, '<code>$1</code>')
-                    .replace(/\n/g, '<br>');
+                content = sanitizeHTML(
+                    content
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/`(.*?)`/g, '<code>$1</code>')
+                        .replace(/\n/g, '<br>')
+                );
                 messageEl.innerHTML = content;
             } else {
                 messageEl.textContent = content;
@@ -1360,8 +1405,8 @@
                     container.remove();
                 };
 
-                btn.addEventListener('click', send);
-                btn.addEventListener('keydown', (e) => {
+                this.addListener(btn, 'click', send);
+                const keyHandler = (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         send();
@@ -1372,7 +1417,8 @@
                         e.preventDefault();
                         (btn.previousElementSibling || quickContainer.lastElementChild).focus();
                     }
-                });
+                };
+                this.addListener(btn, 'keydown', keyHandler);
 
                 quickContainer.appendChild(btn);
             });
@@ -1421,28 +1467,7 @@
             this.showTyping();
             
             try {
-                const formData = new FormData();
-                formData.append('action', 'chat');
-                formData.append('message', message);
-                formData.append('workspace', this.config.workspace);
-                if (this.sessionId) {
-                    formData.append('sessionId', this.sessionId);
-                }
-
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 15000);
-                const response = await fetchWithFallback(this.config.apiEndpoint, {
-                    method: 'POST',
-                    body: formData,
-                    signal: controller.signal
-                });
-                clearTimeout(timeout);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const data = await response.json();
+                const data = await this.api.chat(message, this.sessionId, this.config.workspace);
                 if (data.sessionId) {
                     this.sessionId = data.sessionId;
                     try {
@@ -1450,7 +1475,7 @@
                     } catch (e) { /* ignore */ }
                 }
                 this.hideTyping();
-                
+
                 if (data.error) {
                     this.addMessage(`❌ ${data.error}`, false, true);
                 } else if (data.success && data.message) {
@@ -1458,13 +1483,13 @@
                 } else {
                     this.addMessage('❌ Aucune réponse reçue du serveur', false, true);
                 }
-                
+
             } catch (error) {
                 this.hideTyping();
                 this.addMessage(`❌ Erreur de connexion: ${error.message}`, false, true);
                 console.error('Widget error:', error);
             }
-            
+
             this.setProcessing(false);
         }
         
@@ -1498,19 +1523,47 @@
             const msg = this.config.welcomeMessage && this.config.welcomeMessage.trim() !== ''
                 ? this.config.welcomeMessage
                 : `👋 **Bonjour !** Bienvenue chez ${this.config.title}.\n\nComment puis-je vous aider aujourd'hui ?`;
-            bubble.innerHTML = msg
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
+            bubble.innerHTML = sanitizeHTML(
+                msg
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>')
+            );
             this.element.appendChild(bubble);
-            bubble.addEventListener('click', () => this.openWidget());
+            const handler = () => this.openWidget();
+            this.addListener(bubble, 'click', handler);
             this.greetingBubble = bubble;
         }
+
+        destroy() {
+            this.listeners.forEach(({ el, type, handler }) => {
+                el.removeEventListener(type, handler);
+            });
+            this.greetingBubble?.remove();
+        }
     }
-    
+
+    class SymplissimeWidget {
+        constructor(element) {
+            const config = getConfig(element);
+            const api = new WidgetAPI(config.apiEndpoint);
+            this.ui = new WidgetUI(element, config, api);
+        }
+
+        destroy() {
+            this.ui.destroy();
+            widgetInstances.delete(this.ui.element);
+        }
+    }
+
     // Auto-initialization
     async function initializeWidgets() {
-        await themesLoaded;
+        try {
+            await themesLoaded;
+        } catch {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await ThemeCache.getThemes();
+        }
         const widgets = document.querySelectorAll('.symplissime-chat-widget');
 
         widgets.forEach(element => {
@@ -1524,10 +1577,11 @@
     let observer;
     const observedContainers = new WeakSet();
     let debouncePending = false;
+    const DEBOUNCE_DELAY = 500;
 
     function observeContainer(container) {
         if (!observer || !container || observedContainers.has(container)) return;
-        observer.observe(container, { childList: true });
+        observer.observe(container, { childList: true, subtree: false });
         observedContainers.add(container);
     }
 
@@ -1540,7 +1594,7 @@
         setTimeout(() => {
             debouncePending = false;
             initializeWidgets();
-        }, 100);
+        }, DEBOUNCE_DELAY);
     }
 
     if (supports('MutationObserver')) {
