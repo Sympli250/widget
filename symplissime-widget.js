@@ -115,6 +115,19 @@
             pointer-events: none;
         }
 
+        .symplissime-fab-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            display: none;
+            transform: translate(50%, -50%);
+        }
+
         /* Greeting bubble */
         .symplissime-greeting-bubble {
             position: absolute;
@@ -594,7 +607,8 @@
             this.isMinimized = false;
             this.isProcessing = false;
             this.sessionId = this.generateSessionId();
-            
+            this.unreadCount = 0;
+
             this.init();
         }
         
@@ -672,8 +686,9 @@
             this.element.innerHTML = `
                 <button class="symplissime-fab" type="button">
                     <div class="symplissime-fab-icon">${ICONS.chat}</div>
+                    <div class="symplissime-fab-badge"></div>
                 </button>
-                
+
                 <div class="symplissime-widget">
                     <div class="symplissime-header">
                         <div class="symplissime-header-content">
@@ -716,8 +731,10 @@
             this.input = this.element.querySelector('.symplissime-input');
             this.sendBtn = this.element.querySelector('.symplissime-send');
             this.form = this.element.querySelector('.symplissime-input-form');
-            
+            this.badge = this.element.querySelector('.symplissime-fab-badge');
+
             this.setupAutoResize();
+            this.updateBadge();
         }
         
         setupAutoResize() {
@@ -768,6 +785,8 @@
         
         openWidget() {
             this.isOpen = true;
+            this.unreadCount = 0;
+            this.updateBadge();
             this.widget.classList.add('open');
             this.fab.classList.add('closing');
             this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.close;
@@ -796,15 +815,29 @@
         
         toggleMinimize() {
             if (!this.isOpen) return;
-            
+
             this.isMinimized = !this.isMinimized;
             this.widget.classList.toggle('minimized', this.isMinimized);
-            
+
             if (!this.isMinimized) {
                 setTimeout(() => this.input.focus(), 100);
             }
+
+            this.unreadCount = 0;
+            this.updateBadge();
         }
-        
+
+        updateBadge() {
+            if (!this.badge) return;
+            if (this.unreadCount > 0) {
+                this.badge.textContent = this.unreadCount;
+                this.badge.style.display = 'flex';
+            } else {
+                this.badge.textContent = '';
+                this.badge.style.display = 'none';
+            }
+        }
+
         addMessage(content, isUser = false, isError = false) {
             const messageEl = document.createElement('div');
             messageEl.className = `symplissime-message ${isUser ? 'user' : 'bot'} ${isError ? 'error' : ''}`;
@@ -819,9 +852,14 @@
             } else {
                 messageEl.textContent = content;
             }
-            
+
             this.messages.appendChild(messageEl);
             this.scrollToBottom();
+
+            if (!isUser && !isError && (!this.isOpen || this.isMinimized)) {
+                this.unreadCount++;
+                this.updateBadge();
+            }
         }
         
         addQuickMessages() {
