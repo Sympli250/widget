@@ -586,7 +586,8 @@
                 autoOpen: element.dataset.autoOpen === 'true',
                 showBranding: element.dataset.showBranding !== 'false',
                 enableSound: element.dataset.enableSound === 'true',
-                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|') : []
+                quickMessages: element.dataset.quickMessages ? element.dataset.quickMessages.split('|') : [],
+                welcomeMessage: element.dataset.welcomeMessage || ''
             };
         }
         
@@ -887,10 +888,11 @@
         
         showWelcomeMessage() {
             setTimeout(() => {
-                this.addMessage(`👋 **Bonjour !** Bienvenue chez ${this.config.title}.
+                const msg = this.config.welcomeMessage && this.config.welcomeMessage.trim() !== ''
+                    ? this.config.welcomeMessage
+                    : `👋 **Bonjour !** Bienvenue chez ${this.config.title}.\n\nComment puis-je vous aider aujourd'hui ?`;
+                this.addMessage(msg);
 
-Comment puis-je vous aider aujourd'hui ?`);
-                
                 if (this.config.quickMessages.length > 0) {
                     setTimeout(() => {
                         this.addQuickMessages();

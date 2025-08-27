@@ -83,6 +83,9 @@ $defaultConfig = [
         'auto_open' => false,
         'position' => 'bottom-right',
         'theme' => 'symplissime'
+    ],
+    'greetings' => [
+        'welcome_message' => "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?"
     ]
 ];
 
@@ -119,14 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['attributes']['auto_open'] = isset($_POST['auto_open']);
     $config['attributes']['position'] = $_POST['position'] ?? 'bottom-right';
     $config['attributes']['theme'] = $_POST['theme'] ?? 'symplissime';
+    $config['greetings']['welcome_message'] = $_POST['welcome_message'] ?? $defaultConfig['greetings']['welcome_message'];
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 $snippet = '<script src="symplissime-widget.js"></script>' . "\n";
+$welcomeAttr = str_replace("\n", '&#10;', htmlspecialchars($config['greetings']['welcome_message'], ENT_QUOTES));
 $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-api-endpoint="' . htmlspecialchars($config['attributes']['api_endpoint']) . '" '
     . 'data-workspace="' . htmlspecialchars($config['attributes']['workspace']) . '" '
     . 'data-title="' . htmlspecialchars($config['attributes']['title']) . '" '
+    . 'data-welcome-message="' . $welcomeAttr . '" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
     . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
     . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '"></div>';
@@ -218,6 +224,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
     <div class="tabs">
         <button type="button" class="tablink active" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
+        <button type="button" class="tablink" data-tab="greetings">Greetings</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
         <button type="button" class="tablink" data-tab="preview">Preview</button>
     </div>
@@ -272,6 +279,12 @@ $snippet .= '<div class="symplissime-chat-widget" '
         </label>
     </div>
 
+    <div id="greetings" class="tabcontent">
+        <label>Welcome message:<br>
+            <textarea name="welcome_message"><?php echo htmlspecialchars($config['greetings']['welcome_message']); ?></textarea>
+        </label>
+    </div>
+
     <div id="code" class="tabcontent">
         <textarea readonly id="snippet"><?php echo htmlspecialchars($snippet); ?></textarea>
         <button type="button" id="copySnippet">Copier</button>
@@ -307,8 +320,9 @@ $snippet .= '<div class="symplissime-chat-widget" '
 
     function buildSnippet(data) {
         const autoOpen = data.get('auto_open') ? 'true' : 'false';
+        const welcome = data.get('welcome_message').replace(/\n/g, '&#10;').replace(/"/g, '&quot;');
         return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
     }
 
     function updateSnippet() {
@@ -325,6 +339,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.apiEndpoint = data.get('api_endpoint');
         widget.dataset.workspace = data.get('workspace');
         widget.dataset.title = data.get('title');
+        widget.dataset.welcomeMessage = data.get('welcome_message');
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
         widget.dataset.theme = data.get('theme');
