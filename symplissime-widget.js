@@ -1242,31 +1242,49 @@
     async function initializeWidgets() {
         await themesLoaded;
         const widgets = document.querySelectorAll('.symplissime-chat-widget:not([data-widget-initialized])');
-        
+
         widgets.forEach(element => {
             element.setAttribute('data-widget-initialized', 'true');
             new SymplissimeWidget(element);
+            observeContainer(element.parentElement);
         });
     }
-    
+
+    let observer;
+    const observedContainers = new Set();
+    let debouncePending = false;
+
+    function observeContainer(container) {
+        if (!observer || !container || observedContainers.has(container)) return;
+        observer.observe(container, { childList: true });
+        observedContainers.add(container);
+    }
+
+    function handleMutations(mutations) {
+        const external = mutations.some(
+            m => !m.target.closest('.symplissime-chat-widget[data-widget-initialized]')
+        );
+        if (!external || debouncePending) return;
+        debouncePending = true;
+        setTimeout(() => {
+            debouncePending = false;
+            initializeWidgets();
+        }, 100);
+    }
+
+    if (typeof MutationObserver !== 'undefined') {
+        observer = new MutationObserver(handleMutations);
+        document
+            .querySelectorAll('.symplissime-chat-widget')
+            .forEach(widget => observeContainer(widget.parentElement));
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeWidgets);
     } else {
         setTimeout(initializeWidgets, 0);
     }
-    
-    if (typeof MutationObserver !== 'undefined') {
-        let observerTimeout;
-        const observer = new MutationObserver(() => {
-            clearTimeout(observerTimeout);
-            observerTimeout = setTimeout(initializeWidgets, 100);
-        });
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    }
-    
+
     window.SymplissimeWidget = SymplissimeWidget;
-    
+
 })();
