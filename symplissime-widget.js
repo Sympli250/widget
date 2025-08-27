@@ -748,9 +748,9 @@
             this.unreadCount = 0;
             this.history = [];
 
-            themesLoaded.then(() => this.init());
+            this.init();
         }
-        
+
         getConfig(element) {
             return {
                 apiEndpoint: element.dataset.apiEndpoint || 'symplissime-widget-api.php',
@@ -781,7 +781,8 @@
             };
         }
         
-        init() {
+        async init() {
+            await themesLoaded;
             this.injectStyles();
             this.applyTheme();
             this.createWidget();
