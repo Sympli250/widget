@@ -89,6 +89,18 @@ $defaultConfig = [
         'welcome_message' => "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
         'display_mode' => 'bubble_immediate',
         'display_delay' => 30
+    ],
+    'general' => [
+        'display_name' => 'Symplissime AI',
+        'profile_picture' => '',
+        'bubble_icon' => true,
+        'bubble_position' => 'right',
+        'send_history_email' => false,
+        'owner_email' => '',
+        'footer_enabled' => false,
+        'footer_text' => '',
+        'language' => 'fr',
+        'time_zone' => 'Europe/Paris'
     ]
 ];
 
@@ -129,6 +141,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['greetings']['welcome_message'] = $_POST['welcome_message'] ?? $defaultConfig['greetings']['welcome_message'];
     $config['greetings']['display_mode'] = $_POST['display_mode'] ?? $defaultConfig['greetings']['display_mode'];
     $config['greetings']['display_delay'] = isset($_POST['display_delay']) ? (int)$_POST['display_delay'] : $defaultConfig['greetings']['display_delay'];
+    $config['general']['display_name'] = trim(preg_replace('/\s+/', ' ', $_POST['display_name'] ?? $defaultConfig['general']['display_name']));
+    $config['general']['profile_picture'] = $_POST['profile_picture'] ?? '';
+    $config['general']['bubble_icon'] = isset($_POST['bubble_icon']);
+    $config['general']['bubble_position'] = $_POST['bubble_position'] ?? 'right';
+    $config['general']['send_history_email'] = isset($_POST['send_history_email']);
+    $config['general']['owner_email'] = $_POST['owner_email'] ?? '';
+    $config['general']['footer_enabled'] = isset($_POST['footer_enabled']);
+    $config['general']['footer_text'] = $_POST['footer_text'] ?? '';
+    $config['general']['language'] = $_POST['language'] ?? 'fr';
+    $config['general']['time_zone'] = $_POST['time_zone'] ?? $defaultConfig['general']['time_zone'];
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
@@ -145,7 +167,17 @@ $snippet .= '<div class="symplissime-chat-widget" '
     . 'data-greeting-delay="' . htmlspecialchars($config['greetings']['display_delay']) . '" '
     . 'data-auto-open="' . ($config['attributes']['auto_open'] ? 'true' : 'false') . '" '
     . 'data-position="' . htmlspecialchars($config['attributes']['position']) . '" '
-    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '"></div>';
+    . 'data-theme="' . htmlspecialchars($config['attributes']['theme']) . '" '
+    . 'data-display-name="' . htmlspecialchars($config['general']['display_name']) . '" '
+    . 'data-profile-picture="' . htmlspecialchars($config['general']['profile_picture']) . '" '
+    . 'data-bubble-icon="' . ($config['general']['bubble_icon'] ? 'true' : 'false') . '" '
+    . 'data-bubble-position="' . htmlspecialchars($config['general']['bubble_position']) . '" '
+    . 'data-send-history-email="' . ($config['general']['send_history_email'] ? 'true' : 'false') . '" '
+    . 'data-owner-email="' . htmlspecialchars($config['general']['owner_email']) . '" '
+    . 'data-footer-enabled="' . ($config['general']['footer_enabled'] ? 'true' : 'false') . '" '
+    . 'data-footer-text="' . htmlspecialchars($config['general']['footer_text']) . '" '
+    . 'data-language="' . htmlspecialchars($config['general']['language']) . '" '
+    . 'data-time-zone="' . htmlspecialchars($config['general']['time_zone']) . '"></div>';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -232,11 +264,53 @@ $snippet .= '<div class="symplissime-chat-widget" '
 <div class="container">
 <form method="post" id="configForm">
     <div class="tabs">
-        <button type="button" class="tablink active" data-tab="themes">Thèmes</button>
+        <button type="button" class="tablink active" data-tab="general">General</button>
+        <button type="button" class="tablink" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
         <button type="button" class="tablink" data-tab="greetings">Greetings</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
         <button type="button" class="tablink" data-tab="preview">Preview</button>
+    </div>
+
+    <div id="general" class="tabcontent active">
+        <label>Display Name:
+            <input type="text" name="display_name" maxlength="60" value="<?php echo htmlspecialchars($config['general']['display_name']); ?>">
+        </label><br><br>
+        <label>Profile Picture URL:
+            <input type="text" name="profile_picture" id="profile_picture" value="<?php echo htmlspecialchars($config['general']['profile_picture']); ?>">
+            <img id="profile_preview" src="<?php echo htmlspecialchars($config['general']['profile_picture']); ?>" alt="" style="max-width:50px;<?php echo $config['general']['profile_picture'] ? '' : 'display:none'; ?>">
+            <button type="button" id="remove_profile">Retirer</button>
+        </label><br><br>
+        <label>Bubble Icon:
+            <input type="checkbox" name="bubble_icon" <?php echo $config['general']['bubble_icon'] ? 'checked' : ''; ?>>
+        </label><br><br>
+        <label>Bubble Position:
+            <select name="bubble_position">
+                <option value="right" <?php echo $config['general']['bubble_position'] === 'right' ? 'selected' : ''; ?>>Right</option>
+                <option value="left" <?php echo $config['general']['bubble_position'] === 'left' ? 'selected' : ''; ?>>Left</option>
+            </select>
+        </label><br><br>
+        <label>Send Chat History to Email:
+            <input type="checkbox" name="send_history_email" <?php echo $config['general']['send_history_email'] ? 'checked' : ''; ?>>
+        </label><br><br>
+        <label>Owner Email:
+            <input type="email" name="owner_email" value="<?php echo htmlspecialchars($config['general']['owner_email']); ?>">
+        </label><br><br>
+        <label>Footer:
+            <input type="checkbox" name="footer_enabled" <?php echo $config['general']['footer_enabled'] ? 'checked' : ''; ?>>
+        </label><br><br>
+        <label>Footer Text:
+            <textarea name="footer_text"><?php echo htmlspecialchars($config['general']['footer_text']); ?></textarea>
+        </label><br><br>
+        <label>Language:
+            <select name="language">
+                <option value="fr" <?php echo $config['general']['language'] === 'fr' ? 'selected' : ''; ?>>Français</option>
+                <option value="en" <?php echo $config['general']['language'] === 'en' ? 'selected' : ''; ?>>English</option>
+            </select>
+        </label><br><br>
+        <label>Time Zone:
+            <input type="text" name="time_zone" value="<?php echo htmlspecialchars($config['general']['time_zone']); ?>">
+        </label>
     </div>
 
     <div id="themes" class="tabcontent">
@@ -349,7 +423,7 @@ $snippet .= '<div class="symplissime-chat-widget" '
         const welcome = data.get('welcome_message').replace(/\n/g, '&#10;').replace(/"/g, '&quot;');
         const quick = data.get('quick_messages').split('\n').map(m => m.trim()).filter(Boolean).join('|').replace(/"/g, '&quot;');
         return '<script src="symplissime-widget.js"><\/script>\n' +
-            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-quick-messages="${quick}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}"></div>`;
+            `<div class="symplissime-chat-widget" data-api-endpoint="${data.get('api_endpoint')}" data-workspace="${data.get('workspace')}" data-title="${data.get('title')}" data-welcome-message="${welcome}" data-quick-messages="${quick}" data-greeting-mode="${data.get('display_mode')}" data-greeting-delay="${data.get('display_delay')}" data-auto-open="${autoOpen}" data-position="${data.get('position')}" data-theme="${data.get('theme')}" data-display-name="${data.get('display_name')}" data-profile-picture="${data.get('profile_picture')}" data-bubble-icon="${data.get('bubble_icon') ? 'true' : 'false'}" data-bubble-position="${data.get('bubble_position')}" data-send-history-email="${data.get('send_history_email') ? 'true' : 'false'}" data-owner-email="${data.get('owner_email')}" data-footer-enabled="${data.get('footer_enabled') ? 'true' : 'false'}" data-footer-text="${data.get('footer_text')}" data-language="${data.get('language')}" data-time-zone="${data.get('time_zone')}"></div>`;
     }
 
     function updateSnippet() {
@@ -373,6 +447,16 @@ $snippet .= '<div class="symplissime-chat-widget" '
         widget.dataset.autoOpen = data.get('auto_open') ? 'true' : 'false';
         widget.dataset.position = data.get('position');
         widget.dataset.theme = data.get('theme');
+        widget.dataset.displayName = data.get('display_name');
+        widget.dataset.profilePicture = data.get('profile_picture');
+        widget.dataset.bubbleIcon = data.get('bubble_icon') ? 'true' : 'false';
+        widget.dataset.bubblePosition = data.get('bubble_position');
+        widget.dataset.sendHistoryEmail = data.get('send_history_email') ? 'true' : 'false';
+        widget.dataset.ownerEmail = data.get('owner_email');
+        widget.dataset.footerEnabled = data.get('footer_enabled') ? 'true' : 'false';
+        widget.dataset.footerText = data.get('footer_text');
+        widget.dataset.language = data.get('language');
+        widget.dataset.timeZone = data.get('time_zone');
         preview.appendChild(widget);
     }
 
@@ -390,6 +474,23 @@ $snippet .= '<div class="symplissime-chat-widget" '
             alert('Snippet copié !');
         });
     });
+
+    const profileInput = document.getElementById('profile_picture');
+    const profilePreview = document.getElementById('profile_preview');
+    const removeProfileBtn = document.getElementById('remove_profile');
+    if (profileInput) {
+        profileInput.addEventListener('input', () => {
+            profilePreview.src = profileInput.value;
+            profilePreview.style.display = profileInput.value ? 'block' : 'none';
+            updateAll();
+        });
+        removeProfileBtn.addEventListener('click', () => {
+            profileInput.value = '';
+            profilePreview.src = '';
+            profilePreview.style.display = 'none';
+            updateAll();
+        });
+    }
 </script>
 </body>
 </html>

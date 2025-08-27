@@ -12,5 +12,17 @@
     "welcome_message": "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
     "display_mode": "bubble_immediate",
     "display_delay": 30
+  },
+  "general": {
+    "display_name": "Symplissime AI",
+    "profile_picture": "",
+    "bubble_icon": true,
+    "bubble_position": "right",
+    "send_history_email": false,
+    "owner_email": "",
+    "footer_enabled": false,
+    "footer_text": "",
+    "language": "fr",
+    "time_zone": "Europe/Paris"
   }
 }
