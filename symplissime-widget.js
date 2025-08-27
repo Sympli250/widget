@@ -45,6 +45,62 @@
             textSecondary: '#718096',
             border: '#e2e8f0',
             shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
+        },
+        professional: {
+            name: 'Professional Blue',
+            primary: '#4299e1',
+            primaryHover: '#3182ce',
+            primaryLight: '#bee3f8',
+            primaryDark: '#2c5aa0',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(66, 153, 225, 0.15)'
+        },
+        modern: {
+            name: 'Modern Purple',
+            primary: '#9f7aea',
+            primaryHover: '#805ad5',
+            primaryLight: '#e9d8fd',
+            primaryDark: '#6b46c1',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(159, 122, 234, 0.15)'
+        },
+        elegant: {
+            name: 'Elegant Dark',
+            primary: '#4a5568',
+            primaryHover: '#2d3748',
+            primaryLight: '#e2e8f0',
+            primaryDark: '#1a202c',
+            success: '#48bb78',
+            background: '#1a202c',
+            backgroundSecondary: '#2d3748',
+            text: '#f7fafc',
+            textSecondary: '#a0aec0',
+            border: '#4a5568',
+            shadow: '0 4px 20px rgba(74, 85, 104, 0.3)'
+        },
+        minimal: {
+            name: 'Minimal Gray',
+            primary: '#a0aec0',
+            primaryHover: '#718096',
+            primaryLight: '#f7fafc',
+            primaryDark: '#4a5568',
+            success: '#48bb78',
+            background: '#ffffff',
+            backgroundSecondary: '#f7fafc',
+            text: '#1a202c',
+            textSecondary: '#718096',
+            border: '#e2e8f0',
+            shadow: '0 4px 20px rgba(160, 174, 192, 0.15)'
         }
     };
 
@@ -82,8 +138,8 @@
             }
         } catch (err) {
             console.error('Erreur de chargement des thèmes:', err);
-            // fallback vers le thème par défaut
-            THEMES = DEFAULT_THEMES;
+            // fallback vers les thèmes embarqués
+            THEMES = { ...DEFAULT_THEMES };
         } finally {
             clearTimeout(timeout);
         }
