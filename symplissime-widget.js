@@ -1196,7 +1196,8 @@
 
         changeState(newState) {
             clearTimeout(this.stateTimeout);
-            if (newState === 'closed') {
+            // Only set auto-close timeout when leaving the open state
+            if (this.state.state === 'open' && newState === 'closed') {
                 this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
             }
 
