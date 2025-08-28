@@ -53,12 +53,19 @@
         widget.dataset.profilePicture = data.get("profile_picture");
         widget.dataset.bubbleIcon = data.get("bubble_icon");
         widget.dataset.bubblePosition = data.get("bubble_position");
-        widget.dataset.sendHistoryEmail = data.get("send_history_email") ? "true" : "false";
-        widget.dataset.ownerEmail = data.get("owner_email");
         widget.dataset.footerEnabled = data.get("footer_enabled") ? "true" : "false";
         widget.dataset.footerText = data.get("footer_text");
         widget.dataset.language = data.get("language");
         widget.dataset.timeZone = data.get("time_zone");
+        widget.dataset.emailEnabled = data.get("email_enabled") ? "true" : "false";
+        widget.dataset.emailOwner = data.get("email_owner");
+        widget.dataset.emailCc = data.get("email_cc");
+        widget.dataset.emailBcc = data.get("email_bcc");
+        widget.dataset.emailSubject = data.get("email_subject");
+        widget.dataset.emailBodyFormat = data.get("email_body_format");
+        widget.dataset.emailAttach = data.get("email_attach");
+        widget.dataset.emailTriggerClose = data.get("email_trigger_on_close") ? "true" : "false";
+        widget.dataset.emailInactivity = data.get("email_inactivity_minutes");
         preview.appendChild(widget);
       }
 

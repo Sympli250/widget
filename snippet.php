@@ -18,12 +18,19 @@ function renderSnippet(array $config): string {
     $profilePicture = htmlspecialchars($config['general']['profile_picture'], ENT_QUOTES);
     $bubbleIcon = htmlspecialchars($config['general']['bubble_icon'], ENT_QUOTES);
     $bubblePosition = htmlspecialchars($config['general']['bubble_position'], ENT_QUOTES);
-    $sendHistoryEmail = $config['general']['send_history_email'] ? 'true' : 'false';
-    $ownerEmail = htmlspecialchars($config['general']['owner_email'], ENT_QUOTES);
     $footerEnabled = $config['general']['footer_enabled'] ? 'true' : 'false';
     $footerText = htmlspecialchars($config['general']['footer_text'], ENT_QUOTES);
     $language = htmlspecialchars($config['general']['language'], ENT_QUOTES);
     $timeZone = htmlspecialchars($config['general']['time_zone'], ENT_QUOTES);
+    $emailEnabled = $config['email_export']['enabled'] ? 'true' : 'false';
+    $emailOwner = htmlspecialchars($config['email_export']['owner_email'] ?? '', ENT_QUOTES);
+    $emailCc = htmlspecialchars(implode(',', $config['email_export']['cc'] ?? []), ENT_QUOTES);
+    $emailBcc = htmlspecialchars(implode(',', $config['email_export']['bcc'] ?? []), ENT_QUOTES);
+    $emailSubject = htmlspecialchars($config['email_export']['subject_template'] ?? '', ENT_QUOTES);
+    $emailBody = htmlspecialchars($config['email_export']['body_format'] ?? 'html', ENT_QUOTES);
+    $emailAttach = htmlspecialchars($config['email_export']['attach_transcript'] ?? 'none', ENT_QUOTES);
+    $emailTriggerClose = !empty($config['email_export']['trigger']['on_close']) ? 'true' : 'false';
+    $emailInactivity = htmlspecialchars($config['email_export']['trigger']['inactivity_minutes'] ?? '', ENT_QUOTES);
     return <<<HTML
 <script src="symplissime-widget.js"></script>
 <div class="symplissime-chat-widget"
@@ -43,12 +50,19 @@ function renderSnippet(array $config): string {
      data-profile-picture="$profilePicture"
      data-bubble-icon="$bubbleIcon"
      data-bubble-position="$bubblePosition"
-     data-send-history-email="$sendHistoryEmail"
-     data-owner-email="$ownerEmail"
      data-footer-enabled="$footerEnabled"
      data-footer-text="$footerText"
      data-language="$language"
      data-time-zone="$timeZone"
+     data-email-enabled="$emailEnabled"
+     data-email-owner="$emailOwner"
+     data-email-cc="$emailCc"
+     data-email-bcc="$emailBcc"
+     data-email-subject="$emailSubject"
+     data-email-body-format="$emailBody"
+     data-email-attach="$emailAttach"
+     data-email-trigger-close="$emailTriggerClose"
+     data-email-inactivity="$emailInactivity"
 ></div>
 HTML;
 }

@@ -23,12 +23,23 @@ $config = [
         'profile_picture' => $_POST['profile_picture'] ?? '',
         'bubble_icon' => $_POST['bubble_icon'] ?? 'default_icon',
         'bubble_position' => $_POST['bubble_position'] ?? 'right',
-        'send_history_email' => isset($_POST['send_history_email']),
-        'owner_email' => $_POST['owner_email'] ?? '',
         'footer_enabled' => isset($_POST['footer_enabled']),
         'footer_text' => $_POST['footer_text'] ?? '',
         'language' => $_POST['language'] ?? 'fr',
         'time_zone' => $_POST['time_zone'] ?? 'Europe/Paris',
+    ],
+    'email_export' => [
+        'enabled' => isset($_POST['email_enabled']),
+        'owner_email' => $_POST['email_owner'] ?? '',
+        'cc' => array_filter(array_map('trim', explode(',', $_POST['email_cc'] ?? ''))),
+        'bcc' => array_filter(array_map('trim', explode(',', $_POST['email_bcc'] ?? ''))),
+        'subject_template' => $_POST['email_subject'] ?? 'Symplissime – Conversation #{{session_id}} – {{date_local}}',
+        'body_format' => $_POST['email_body_format'] ?? 'html',
+        'attach_transcript' => $_POST['email_attach'] ?? 'none',
+        'trigger' => [
+            'on_close' => isset($_POST['email_trigger_on_close']),
+            'inactivity_minutes' => isset($_POST['email_inactivity_minutes']) ? (int)$_POST['email_inactivity_minutes'] : 10,
+        ]
     ],
 ];
 
