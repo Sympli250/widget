@@ -296,6 +296,10 @@
             color: var(--text);
             z-index: 1000;
         }
+        .symplissime-widget-container[data-bubble-position="left"] .symplissime-greeting-bubble {
+            right: auto;
+            left: 0;
+        }
         .symplissime-greeting-bubble strong { font-weight: 600; }
         .symplissime-greeting-bubble em { font-style: italic; }
 
@@ -317,6 +321,10 @@
             transform: translateY(20px) scale(0.95);
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: none;
+        }
+        .symplissime-widget-container[data-bubble-position="left"] .symplissime-widget {
+            right: auto;
+            left: 0;
         }
         
         .symplissime-widget.open {
@@ -1083,6 +1091,11 @@
             if (this.config.bubblePosition === 'left') {
                 this.element.style.right = 'auto';
                 this.element.style.left = '24px';
+            }
+
+            if (this.config.bubblePosition === 'left') {
+                this.widget.style.right = 'auto';
+                this.widget.style.left = '0';
             }
 
             if (this.config.footerEnabled) {
