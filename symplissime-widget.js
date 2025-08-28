@@ -1093,10 +1093,6 @@
                 this.element.style.left = '24px';
             }
 
-            if (this.config.bubblePosition === 'left') {
-                this.widget.style.right = 'auto';
-                this.widget.style.left = '0';
-            }
 
             if (this.config.footerEnabled) {
                 const footer = this.element.querySelector('.symplissime-footer');
