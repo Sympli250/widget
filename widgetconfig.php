@@ -23,7 +23,7 @@ $defaultConfig = [
     'general' => [
         'display_name' => 'Symplissime AI',
         'profile_picture' => '',
-        'bubble_icon' => 'default_icon',
+        'bubble_icon' => 'chat',
         'bubble_position' => 'right',
         'footer_enabled' => false,
         'footer_text' => '',
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['greetings']['display_delay'] = isset($_POST['display_delay']) ? (int)$_POST['display_delay'] : $defaultConfig['greetings']['display_delay'];
     $config['general']['display_name'] = trim(preg_replace('/\s+/', ' ', $_POST['display_name'] ?? $defaultConfig['general']['display_name']));
     $config['general']['profile_picture'] = $_POST['profile_picture'] ?? '';
-    $config['general']['bubble_icon'] = $_POST['bubble_icon'] ?? 'default_icon';
+    $config['general']['bubble_icon'] = $_POST['bubble_icon'] ?? 'chat';
     $config['general']['bubble_position'] = $_POST['bubble_position'] ?? 'right';
     $config['general']['footer_enabled'] = isset($_POST['footer_enabled']);
     $config['general']['footer_text'] = $_POST['footer_text'] ?? '';
@@ -169,10 +169,14 @@ $snippet = renderSnippet($config);
         <label>Bubble Icon:
             <select name="bubble_icon" id="bubble_icon">
                 <?php
-                $icons = ['default_icon', 'message', 'question', 'robot', 'support', 'star'];
+                $icons = [
+                    'chat', 'chatOutline', 'chatDots', 'chatText', 'chatSmile',
+                    'chatQuestion', 'chatInfo', 'chatCheck', 'chatX', 'chatSparkles',
+                    'chatBot', 'chatQuote', 'lifesaver'
+                ];
                 foreach ($icons as $icon) {
                     $selected = $config['general']['bubble_icon'] === $icon ? 'selected' : '';
-                    $label = ucwords(str_replace('_', ' ', $icon));
+                    $label = ucwords(preg_replace('/([a-z])([A-Z])/', '$1 $2', $icon));
                     echo "<option value=\"$icon\" $selected>$label</option>";
                 }
                 ?>

@@ -757,47 +757,39 @@
     `;
     
     // Icônes SVG
+    const ICONS_CHAT = {
+        chat: `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4l4 4 4-4h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>`,
+        chatOutline: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l-3 3 4-1h9a4 4 0 0 0 4-4V7a4 4 0 0 0-4-4H8A4 4 0 0 0 4 7v4"/></svg>`,
+        chatDots: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>`,
+        chatText: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M8 9h8"/><path d="M8 12h6"/></svg>`,
+        chatSmile: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M10 11s.8 1 2 1 2-1 2-1"/><path d="M10 9h.01"/><path d="M14 9h.01"/></svg>`,
+        chatQuestion: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M11 9a2 2 0 1 1 2 2c-.5.3-1 .8-1 1.5"/><path d="M12 15h.01"/></svg>`,
+        chatInfo: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M12 8v.01"/><path d="M12 11v3"/></svg>`,
+        chatCheck: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M9 11l2 2 4-4"/></svg>`,
+        chatX: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M9.5 9.5l5 5"/><path d="M14.5 9.5l-5 5"/></svg>`,
+        chatSparkles: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M18 5l1-2 1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/><path d="M6 5l.5-1 .5 1 1 .5-1 .5-.5 1-.5-1-1-.5 1-.5z"/></svg>`,
+        chatBot: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-1V4"/><rect x="9" y="6" width="6" height="5" rx="2"/><circle cx="11" cy="8.5" r=".5"/><circle cx="13" cy="8.5" r=".5"/><path d="M12 6V4"/></svg>`,
+        chatQuote: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l-2 3 4-1h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H8A3 3 0 0 0 5 7v3"/><path d="M9 9c0-1 .8-2 2-2v3c0 1-1 2-2 2"/><path d="M14 9c0-1 .8-2 2-2v3c0 1-1 2-2 2"/></svg>`,
+        lifesaver: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6l2.8 2.8"/><path d="M18.4 5.6l-2.8 2.8"/><path d="M5.6 18.4l2.8-2.8"/><path d="M18.4 18.4l-2.8-2.8"/></svg>`
+    };
+
     const ICONS = {
-        chat: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>`,
-        
         close: `<svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
         </svg>`,
-        
+
         minimize: `<svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 19h12v2H6z"/>
         </svg>`,
-        
+
         send: `<svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
         </svg>`,
 
-        default_icon: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>`,
-
-        message: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-        </svg>`,
-
-        question: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 12.9 12 13.5 12 15h-2v-.5c0-1 .45-1.5 1.07-2.17l1.2-1.2c.37-.37.58-.88.58-1.42 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.67-.93 2.25z"/>
-        </svg>`,
-
-        robot: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 1a1 1 0 100 2 1 1 0 000-2zm8 2h-1V2a1 1 0 10-2 0v1H7V2a1 1 0 10-2 0v1H4c-1.1 0-2 .9-2 2v11a3 3 0 003 3h2v3h10v-3h2a3 3 0 003-3V5c0-1.1-.9-2-2-2zM4 16V5h16v11a1 1 0 01-1 1h-2v-3H7v3H5a1 1 0 01-1-1zm4 3v-3h8v3H8zm1-7h2v2H9v-2zm4 0h2v2h-2v-2z"/>
-        </svg>`,
-
-        support: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 1C6.48 1 2 5.48 2 11v5c0 .55.45 1 1 1h3v-6H4v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-2v6h3c.55 0 1-.45 1-1v-5c0-5.52-4.48-10-10-10z"/>
-        </svg>`,
-
-        star: `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
-        </svg>`
+        default_icon: ICONS_CHAT.chat
     };
+
+    Object.assign(ICONS, ICONS_CHAT);
 
     const I18N = {
         fr: {
@@ -1686,6 +1678,7 @@
     SymplissimeWidgetNS.Widget = SymplissimeWidget;
     SymplissimeWidgetNS.supports = supports;
     SymplissimeWidgetNS.fetch = fetchWithFallback;
+    SymplissimeWidgetNS.ICONS_CHAT = ICONS_CHAT;
 
     global.SymplissimeWidget = SymplissimeWidgetNS;
 
