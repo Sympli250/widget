@@ -1187,7 +1187,9 @@
 
         changeState(newState) {
             clearTimeout(this.stateTimeout);
-            this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
+            if (newState === 'closed') {
+                this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
+            }
 
             const transitioned = this.state.transition(newState, () => {
                 switch (newState) {
