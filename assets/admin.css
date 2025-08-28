@@ -135,3 +135,10 @@
             color: #22543d;
         }
 
+        .help {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+

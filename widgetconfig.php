@@ -115,12 +115,14 @@ $snippet = renderSnippet($config);
 
     <div id="general" class="tabcontent active">
         <label>Display Name:
-            <input type="text" name="display_name" maxlength="60" value="<?php echo htmlspecialchars($config['general']['display_name']); ?>">
+            <input type="text" name="display_name" maxlength="60" placeholder="Nom affiché dans le widget" value="<?php echo htmlspecialchars($config['general']['display_name']); ?>">
+            <small class="help">Nom visible par vos utilisateurs (60 caractères max).</small>
         </label><br><br>
         <label>Profile Picture URL:
-            <input type="text" name="profile_picture" id="profile_picture" value="<?php echo htmlspecialchars($config['general']['profile_picture']); ?>">
+            <input type="text" name="profile_picture" id="profile_picture" placeholder="https://exemple.com/avatar.png" value="<?php echo htmlspecialchars($config['general']['profile_picture']); ?>">
             <img id="profile_preview" src="<?php echo htmlspecialchars($config['general']['profile_picture']); ?>" alt="" style="max-width:50px;<?php echo $config['general']['profile_picture'] ? '' : 'display:none'; ?>">
             <button type="button" id="remove_profile">Retirer</button>
+            <small class="help">URL complète de l'image de profil.</small>
         </label><br><br>
         <label>Bubble Icon:
             <select name="bubble_icon" id="bubble_icon">
@@ -133,33 +135,41 @@ $snippet = renderSnippet($config);
                 }
                 ?>
             </select>
+            <small class="help">Icône affichée dans la bulle de chat.</small>
         </label><br><br>
         <label>Bubble Position:
             <select name="bubble_position">
                 <option value="right" <?php echo $config['general']['bubble_position'] === 'right' ? 'selected' : ''; ?>>Right</option>
                 <option value="left" <?php echo $config['general']['bubble_position'] === 'left' ? 'selected' : ''; ?>>Left</option>
             </select>
+            <small class="help">Choisissez le coin d'affichage de la bulle.</small>
         </label><br><br>
         <label>Send Chat History to Email:
             <input type="checkbox" name="send_history_email" <?php echo $config['general']['send_history_email'] ? 'checked' : ''; ?>>
+            <small class="help">Envoie la conversation à l'utilisateur par e-mail.</small>
         </label><br><br>
         <label>Owner Email:
-            <input type="email" name="owner_email" value="<?php echo htmlspecialchars($config['general']['owner_email']); ?>">
+            <input type="email" name="owner_email" placeholder="nom@exemple.com" value="<?php echo htmlspecialchars($config['general']['owner_email']); ?>">
+            <small class="help">Adresse e‑mail recevant les discussions.</small>
         </label><br><br>
         <label>Footer:
             <input type="checkbox" name="footer_enabled" <?php echo $config['general']['footer_enabled'] ? 'checked' : ''; ?>>
+            <small class="help">Active un texte personnalisé sous le widget.</small>
         </label><br><br>
         <label>Footer Text:
-            <textarea name="footer_text"><?php echo htmlspecialchars($config['general']['footer_text']); ?></textarea>
+            <textarea name="footer_text" placeholder="Texte du pied de page"><?php echo htmlspecialchars($config['general']['footer_text']); ?></textarea>
+            <small class="help">Texte court affiché sous le widget.</small>
         </label><br><br>
         <label>Language:
             <select name="language">
                 <option value="fr" <?php echo $config['general']['language'] === 'fr' ? 'selected' : ''; ?>>Français</option>
                 <option value="en" <?php echo $config['general']['language'] === 'en' ? 'selected' : ''; ?>>English</option>
             </select>
+            <small class="help">Langue de l'interface du widget.</small>
         </label><br><br>
         <label>Time Zone:
-            <input type="text" name="time_zone" value="<?php echo htmlspecialchars($config['general']['time_zone']); ?>">
+            <input type="text" name="time_zone" placeholder="Europe/Paris" value="<?php echo htmlspecialchars($config['general']['time_zone']); ?>">
+            <small class="help">Fuseau horaire IANA, ex. Europe/Paris.</small>
         </label>
     </div>
 
@@ -198,16 +208,20 @@ $snippet = renderSnippet($config);
 
     <div id="attributes" class="tabcontent">
         <label>API Endpoint:
-            <input type="text" name="api_endpoint" value="<?php echo htmlspecialchars($config['attributes']['api_endpoint']); ?>">
+            <input type="text" name="api_endpoint" placeholder="symplissime-widget-api.php" value="<?php echo htmlspecialchars($config['attributes']['api_endpoint']); ?>">
+            <small class="help">Chemin ou URL du script API.</small>
         </label><br><br>
         <label>Workspace:
-            <input type="text" name="workspace" value="<?php echo htmlspecialchars($config['attributes']['workspace']); ?>">
+            <input type="text" name="workspace" placeholder="ex : monespace" value="<?php echo htmlspecialchars($config['attributes']['workspace']); ?>">
+            <small class="help">Identifiant de votre espace.</small>
         </label><br><br>
         <label>Titre:
-            <input type="text" name="title" value="<?php echo htmlspecialchars($config['attributes']['title']); ?>">
+            <input type="text" name="title" placeholder="Titre du widget" value="<?php echo htmlspecialchars($config['attributes']['title']); ?>">
+            <small class="help">Titre affiché en haut de la fenêtre.</small>
         </label><br><br>
         <label>Auto-ouvrir:
             <input type="checkbox" name="auto_open" <?php echo $config['attributes']['auto_open'] ? 'checked' : ''; ?>>
+            <small class="help">Ouvre le widget à l'arrivée sur la page.</small>
         </label><br><br>
         <label>Position:
             <select name="position">
@@ -216,16 +230,19 @@ $snippet = renderSnippet($config);
                     <option value="<?php echo $pos; ?>" <?php echo $config['attributes']['position'] === $pos ? 'selected' : ''; ?>><?php echo $pos; ?></option>
                 <?php endforeach; ?>
             </select>
+            <small class="help">Emplacement de la fenêtre sur l'écran.</small>
         </label>
     </div>
 
     <div id="greetings" class="tabcontent">
         <label>Welcome message:<br>
-            <textarea name="welcome_message"><?php echo htmlspecialchars($config['greetings']['welcome_message']); ?></textarea>
+            <textarea name="welcome_message" placeholder="Message de bienvenue..."><?php echo htmlspecialchars($config['greetings']['welcome_message']); ?></textarea>
+            <small class="help">Texte affiché lors de l'ouverture du widget.</small>
         </label>
         <br><br>
         <label>Quick replies (one per line):<br>
-            <textarea name="quick_messages"><?php echo htmlspecialchars($config['attributes']['quick_messages']); ?></textarea>
+            <textarea name="quick_messages" placeholder="Bonjour&#10;J'ai une question..."><?php echo htmlspecialchars($config['attributes']['quick_messages']); ?></textarea>
+            <small class="help">Une ligne par suggestion de réponse rapide.</small>
         </label>
         <br><br>
         <label>Display mode:<br>
@@ -234,10 +251,12 @@ $snippet = renderSnippet($config);
                 <option value="bubble_delay" <?php echo $config['greetings']['display_mode'] === 'bubble_delay' ? 'selected' : ''; ?>>Au-dessus de la bulle – après délai</option>
                 <option value="chat" <?php echo $config['greetings']['display_mode'] === 'chat' ? 'selected' : ''; ?>>Dans la fenêtre de chat uniquement</option>
             </select>
+            <small class="help">Emplacement du message de bienvenue.</small>
         </label>
         <br><br>
         <label>Delay (s):<br>
-            <input type="number" name="display_delay" min="0" value="<?php echo htmlspecialchars($config['greetings']['display_delay']); ?>">
+            <input type="number" name="display_delay" min="0" placeholder="30" value="<?php echo htmlspecialchars($config['greetings']['display_delay']); ?>">
+            <small class="help">Délai avant affichage du message (en secondes).</small>
         </label>
     </div>
 
