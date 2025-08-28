@@ -50,6 +50,7 @@ if (file_exists($themesFile)) {
     }
 }
 
+$saved = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postedThemes = $_POST['themes'] ?? [];
     foreach ($themes as $key => $values) {
@@ -85,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['general']['time_zone'] = $_POST['time_zone'] ?? $defaultConfig['general']['time_zone'];
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    $saved = true;
 }
 $snippet = renderSnippet($config);
 ?>
@@ -98,6 +100,9 @@ $snippet = renderSnippet($config);
 </head>
 <body>
 <div class="container">
+<?php if (!empty($saved)) : ?>
+    <div class="notice success">Configuration sauvegardée.</div>
+<?php endif; ?>
 <form method="post" id="configForm">
     <div class="tabs">
         <button type="button" class="tablink active" data-tab="general">General</button>
