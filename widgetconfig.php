@@ -25,12 +25,45 @@ $defaultConfig = [
         'profile_picture' => '',
         'bubble_icon' => 'default_icon',
         'bubble_position' => 'right',
-        'send_history_email' => false,
-        'owner_email' => '',
         'footer_enabled' => false,
         'footer_text' => '',
         'language' => 'fr',
         'time_zone' => 'Europe/Paris'
+    ],
+    'email_export' => [
+        'enabled' => false,
+        'owner_email' => '',
+        'cc' => [],
+        'bcc' => [],
+        'subject_template' => 'Symplissime – Conversation #{{session_id}} – {{date_local}}',
+        'body_format' => 'html',
+        'attach_transcript' => 'none',
+        'trigger' => [
+            'on_close' => true,
+            'inactivity_minutes' => 10
+        ],
+        'smtp' => [
+            'use_custom' => false,
+            'from_name' => '',
+            'from_email' => '',
+            'host' => '',
+            'port' => 587,
+            'security' => 'STARTTLS',
+            'auth' => [
+                'mode' => 'login',
+                'username' => '',
+                'password_encrypted' => ''
+            ],
+            'reply_to' => '',
+            'timeout_seconds' => 20,
+            'retry_attempts' => 3,
+            'rate_limit_per_min' => 30,
+            'last_test_status' => '',
+            'last_test_datetime' => ''
+        ],
+        'logging' => [
+            'retention_days' => 30
+        ]
     ]
 ];
 
@@ -78,12 +111,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['general']['profile_picture'] = $_POST['profile_picture'] ?? '';
     $config['general']['bubble_icon'] = $_POST['bubble_icon'] ?? 'default_icon';
     $config['general']['bubble_position'] = $_POST['bubble_position'] ?? 'right';
-    $config['general']['send_history_email'] = isset($_POST['send_history_email']);
-    $config['general']['owner_email'] = $_POST['owner_email'] ?? '';
     $config['general']['footer_enabled'] = isset($_POST['footer_enabled']);
     $config['general']['footer_text'] = $_POST['footer_text'] ?? '';
     $config['general']['language'] = $_POST['language'] ?? 'fr';
     $config['general']['time_zone'] = $_POST['time_zone'] ?? $defaultConfig['general']['time_zone'];
+
+    $config['email_export']['enabled'] = isset($_POST['email_enabled']);
+    $config['email_export']['owner_email'] = $_POST['email_owner'] ?? '';
+    $config['email_export']['cc'] = array_filter(array_map('trim', explode(',', $_POST['email_cc'] ?? '')));
+    $config['email_export']['bcc'] = array_filter(array_map('trim', explode(',', $_POST['email_bcc'] ?? '')));
+    $config['email_export']['subject_template'] = $_POST['email_subject'] ?? $defaultConfig['email_export']['subject_template'];
+    $config['email_export']['body_format'] = $_POST['email_body_format'] ?? $defaultConfig['email_export']['body_format'];
+    $config['email_export']['attach_transcript'] = $_POST['email_attach'] ?? 'none';
+    $config['email_export']['trigger']['on_close'] = isset($_POST['email_trigger_on_close']);
+    $config['email_export']['trigger']['inactivity_minutes'] = isset($_POST['email_inactivity_minutes']) ? (int)$_POST['email_inactivity_minutes'] : $defaultConfig['email_export']['trigger']['inactivity_minutes'];
 
     file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     $saved = true;
@@ -109,6 +150,7 @@ $snippet = renderSnippet($config);
         <button type="button" class="tablink" data-tab="themes">Thèmes</button>
         <button type="button" class="tablink" data-tab="attributes">Attributs</button>
         <button type="button" class="tablink" data-tab="greetings">Greetings</button>
+        <button type="button" class="tablink" data-tab="email">Email</button>
         <button type="button" class="tablink" data-tab="code">Code</button>
         <button type="button" class="tablink" data-tab="preview">Preview</button>
     </div>
@@ -143,14 +185,6 @@ $snippet = renderSnippet($config);
                 <option value="left" <?php echo $config['general']['bubble_position'] === 'left' ? 'selected' : ''; ?>>Left</option>
             </select>
             <small class="help">Choisissez le coin d'affichage de la bulle.</small>
-        </label><br><br>
-        <label>Send Chat History to Email:
-            <input type="checkbox" name="send_history_email" <?php echo $config['general']['send_history_email'] ? 'checked' : ''; ?>>
-            <small class="help">Envoie la conversation à l'utilisateur par e-mail.</small>
-        </label><br><br>
-        <label>Owner Email:
-            <input type="email" name="owner_email" placeholder="nom@exemple.com" value="<?php echo htmlspecialchars($config['general']['owner_email']); ?>">
-            <small class="help">Adresse e‑mail recevant les discussions.</small>
         </label><br><br>
         <label>Footer:
             <input type="checkbox" name="footer_enabled" <?php echo $config['general']['footer_enabled'] ? 'checked' : ''; ?>>
@@ -257,6 +291,43 @@ $snippet = renderSnippet($config);
         <label>Delay (s):<br>
             <input type="number" name="display_delay" min="0" placeholder="30" value="<?php echo htmlspecialchars($config['greetings']['display_delay']); ?>">
             <small class="help">Délai avant affichage du message (en secondes).</small>
+        </label>
+    </div>
+
+    <div id="email" class="tabcontent">
+        <label>
+            <input type="checkbox" name="email_enabled" <?php echo $config['email_export']['enabled'] ? 'checked' : ''; ?>> Enable email export
+        </label><br><br>
+        <label>Owner Email:
+            <input type="email" name="email_owner" value="<?php echo htmlspecialchars($config['email_export']['owner_email']); ?>">
+        </label><br><br>
+        <label>CC:
+            <input type="text" name="email_cc" value="<?php echo htmlspecialchars(implode(',', $config['email_export']['cc'])); ?>">
+        </label><br><br>
+        <label>BCC:
+            <input type="text" name="email_bcc" value="<?php echo htmlspecialchars(implode(',', $config['email_export']['bcc'])); ?>">
+        </label><br><br>
+        <label>Subject:
+            <input type="text" name="email_subject" value="<?php echo htmlspecialchars($config['email_export']['subject_template']); ?>">
+        </label><br><br>
+        <label>Body format:
+            <select name="email_body_format">
+                <option value="html" <?php echo $config['email_export']['body_format'] === 'html' ? 'selected' : ''; ?>>HTML</option>
+                <option value="text" <?php echo $config['email_export']['body_format'] === 'text' ? 'selected' : ''; ?>>Text</option>
+            </select>
+        </label><br><br>
+        <label>Attach transcript:
+            <select name="email_attach">
+                <option value="none" <?php echo $config['email_export']['attach_transcript'] === 'none' ? 'selected' : ''; ?>>None</option>
+                <option value="txt" <?php echo $config['email_export']['attach_transcript'] === 'txt' ? 'selected' : ''; ?>>TXT</option>
+                <option value="pdf" <?php echo $config['email_export']['attach_transcript'] === 'pdf' ? 'selected' : ''; ?>>PDF</option>
+            </select>
+        </label><br><br>
+        <label>
+            <input type="checkbox" name="email_trigger_on_close" <?php echo $config['email_export']['trigger']['on_close'] ? 'checked' : ''; ?>> Send on close
+        </label><br><br>
+        <label>Inactivity (minutes):
+            <input type="number" name="email_inactivity_minutes" value="<?php echo htmlspecialchars($config['email_export']['trigger']['inactivity_minutes']); ?>">
         </label>
     </div>
 

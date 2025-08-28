@@ -1,5 +1,4 @@
 {
-  "themes": ["#ffffff", "#000000", "#ff0000", "#00ff00", "#0000ff"],
   "attributes": {
     "workspace": "",
     "title": "",
@@ -8,10 +7,10 @@
     "theme": "symplissime",
     "accent_color": "#48bb78",
     "font_family": "default",
-    "quick_messages": "Qu'est-ce que Symplissime ?|Combien coûte Symplissime ?|A qui s'adresse Symplissime ?"
+    "quick_messages": ""
   },
   "greetings": {
-    "welcome_message": "👋 **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
+    "welcome_message": "\uD83D\uDC4B **Bonjour !** Bienvenue chez Symplissime AI.\n\nComment puis-je vous aider aujourd'hui ?",
     "display_mode": "bubble_immediate",
     "display_delay": 30
   },
@@ -20,11 +19,44 @@
     "profile_picture": "",
     "bubble_icon": "default_icon",
     "bubble_position": "right",
-    "send_history_email": false,
-    "owner_email": "",
     "footer_enabled": false,
     "footer_text": "",
     "language": "fr",
     "time_zone": "Europe/Paris"
+  },
+  "email_export": {
+    "enabled": false,
+    "owner_email": "",
+    "cc": [],
+    "bcc": [],
+    "subject_template": "Symplissime – Conversation #{{session_id}} – {{date_local}}",
+    "body_format": "html",
+    "attach_transcript": "none",
+    "trigger": {
+      "on_close": true,
+      "inactivity_minutes": 10
+    },
+    "smtp": {
+      "use_custom": false,
+      "from_name": "",
+      "from_email": "",
+      "host": "",
+      "port": 587,
+      "security": "STARTTLS",
+      "auth": {
+        "mode": "login",
+        "username": "",
+        "password_encrypted": ""
+      },
+      "reply_to": "",
+      "timeout_seconds": 20,
+      "retry_attempts": 3,
+      "rate_limit_per_min": 30,
+      "last_test_status": "",
+      "last_test_datetime": ""
+    },
+    "logging": {
+      "retention_days": 30
+    }
   }
 }

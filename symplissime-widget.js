@@ -836,7 +836,15 @@
         const profilePicture = isValidUrl(element.dataset.profilePicture) ? element.dataset.profilePicture : '';
         const bubbleIcon = (element.dataset.bubbleIcon || '').trim();
         const bubblePosition = ['left', 'right'].includes(element.dataset.bubblePosition) ? element.dataset.bubblePosition : 'right';
-        const ownerEmail = isValidEmail(element.dataset.ownerEmail) ? element.dataset.ownerEmail : '';
+        const emailOwner = isValidEmail(element.dataset.emailOwner) ? element.dataset.emailOwner : '';
+        const emailCc = (element.dataset.emailCc || '').split(',').map(e => e.trim()).filter(isValidEmail);
+        const emailBcc = (element.dataset.emailBcc || '').split(',').map(e => e.trim()).filter(isValidEmail);
+        const emailSubject = (element.dataset.emailSubject || '').trim();
+        const emailBodyFormat = element.dataset.emailBodyFormat === 'text' ? 'text' : 'html';
+        const emailAttach = ['none', 'txt', 'pdf'].includes(element.dataset.emailAttach) ? element.dataset.emailAttach : 'none';
+        const emailTriggerClose = element.dataset.emailTriggerClose === 'true';
+        const inactivity = parseInt(element.dataset.emailInactivity, 10);
+        const emailInactivity = Number.isFinite(inactivity) ? inactivity : 0;
         const footerText = (element.dataset.footerText || '').trim();
         const language = /^[a-z]{2}$/i.test(element.dataset.language || '') ? element.dataset.language : 'fr';
         const timeZone = (element.dataset.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone).trim();
@@ -861,8 +869,17 @@
             profilePicture,
             bubbleIcon,
             bubblePosition,
-            sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
-            ownerEmail,
+            email: {
+                enabled: element.dataset.emailEnabled === 'true',
+                owner: emailOwner,
+                cc: emailCc,
+                bcc: emailBcc,
+                subject: emailSubject,
+                bodyFormat: emailBodyFormat,
+                attach: emailAttach,
+                triggerOnClose: emailTriggerClose,
+                inactivityMinutes: emailInactivity
+            },
             footerEnabled: element.dataset.footerEnabled === 'true',
             footerText,
             language,
@@ -965,6 +982,8 @@
 
             this.stateTimeout = null;
             this.listeners = [];
+            this.emailSent = false;
+            this.inactivityTimer = null;
 
             this.init();
         }
@@ -1251,7 +1270,7 @@
                         this.fab.classList.remove('closing');
                         this.fab.setAttribute('aria-expanded', 'false');
                         this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS[this.config.bubbleIcon] || '';
-                        if (this.config.sendHistoryEmail && this.config.ownerEmail) {
+                        if (this.config.email.enabled && this.config.email.owner && this.config.email.triggerOnClose && !this.emailSent) {
                             this.sendHistoryEmail();
                         }
                         break;
@@ -1333,22 +1352,41 @@
                 message: isUser ? messageEl.textContent : messageEl.innerHTML.replace(/<br>/g, '\n'),
                 timestamp: now.toISOString()
             });
+            this.scheduleEmail();
         }
 
         sendHistoryEmail() {
             const payload = {
-                email: this.config.ownerEmail,
-                displayName: this.config.displayName,
+                owner: this.config.email.owner,
+                cc: this.config.email.cc,
+                bcc: this.config.email.bcc,
+                subject: this.config.email.subject,
+                body_format: this.config.email.bodyFormat,
+                attach: this.config.email.attach,
+                language: this.config.language,
                 timeZone: this.config.timeZone,
                 session: this.state.sessionId,
                 url: window.location.href,
                 messages: this.state.history
             };
-            fetchWithFallback(this.config.apiEndpoint, {
+            fetchWithFallback('send_email.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }).catch(err => console.error('sendHistoryEmail', err));
+            this.emailSent = true;
+        }
+
+        scheduleEmail() {
+            if (!this.config.email.enabled || !this.config.email.owner) return;
+            if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
+            if (this.config.email.inactivityMinutes > 0 && !this.emailSent) {
+                this.inactivityTimer = setTimeout(() => {
+                    if (!this.emailSent) {
+                        this.sendHistoryEmail();
+                    }
+                }, this.config.email.inactivityMinutes * 60000);
+            }
         }
         
         addQuickMessages() {
