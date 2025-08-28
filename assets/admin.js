@@ -67,6 +67,9 @@
         widget.dataset.emailTriggerClose = data.get("email_trigger_on_close") ? "true" : "false";
         widget.dataset.emailInactivity = data.get("email_inactivity_minutes");
         preview.appendChild(widget);
+        if (window.SymplissimeWidget && typeof window.SymplissimeWidget.init === "function") {
+            window.SymplissimeWidget.init();
+        }
       }
 
 
