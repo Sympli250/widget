@@ -137,35 +137,9 @@
             shadow: '0 4px 20px rgba(72, 187, 120, 0.15)'
         },
         async load() {
-            const CACHE_KEY = 'symplissime_widget_themes_v1';
             if (Object.keys(this.cache).length) return this.cache;
             const scriptSrc = document.currentScript ? document.currentScript.src : null;
             const themesUrl = scriptSrc ? new URL('widget-themes.json', scriptSrc) : 'widget-themes.json';
-            try {
-                const cached = localStorage.getItem(CACHE_KEY);
-                if (cached) {
-                    let parsed;
-                    try {
-                        parsed = JSON.parse(cached);
-                    } catch (parseErr) {
-                        console.warn('Cache themes corrompu, suppression:', parseErr);
-                        localStorage.removeItem(CACHE_KEY);
-                    }
-                    if (
-                        parsed &&
-                        typeof parsed.timestamp === 'number' &&
-                        parsed.data &&
-                        typeof parsed.data === 'object' &&
-                        Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000
-                    ) {
-                        this.cache = parsed.data;
-                        return this.cache;
-                    }
-                }
-            } catch (e) {
-                console.warn('Cache themes inaccessible:', e);
-            }
-
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 8000);
             try {
@@ -174,28 +148,12 @@
                 const data = await response.json();
                 if (data && typeof data === 'object') {
                     this.cache = data;
-                    try {
-                        localStorage.setItem(
-                            CACHE_KEY,
-                            JSON.stringify({ data, timestamp: Date.now() })
-                        );
-                    } catch (e) {
-                        /* ignore cache errors */
-                    }
                     return this.cache;
                 }
                 throw new Error('Données de thèmes invalides');
             } catch (err) {
                 console.error('Erreur de chargement des thèmes:', err);
                 this.cache = { symplissime: this.fallback };
-                try {
-                    localStorage.setItem(
-                        CACHE_KEY,
-                        JSON.stringify({ data: this.cache, timestamp: Date.now() })
-                    );
-                } catch (e) {
-                    /* ignore cache errors */
-                }
             } finally {
                 clearTimeout(timeout);
             }
