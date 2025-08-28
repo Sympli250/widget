@@ -772,6 +772,30 @@
         
         send: `<svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>`,
+
+        default_icon: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>`,
+
+        message: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>`,
+
+        question: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 12.9 12 13.5 12 15h-2v-.5c0-1 .45-1.5 1.07-2.17l1.2-1.2c.37-.37.58-.88.58-1.42 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.67-.93 2.25z"/>
+        </svg>`,
+
+        robot: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1a1 1 0 100 2 1 1 0 000-2zm8 2h-1V2a1 1 0 10-2 0v1H7V2a1 1 0 10-2 0v1H4c-1.1 0-2 .9-2 2v11a3 3 0 003 3h2v3h10v-3h2a3 3 0 003-3V5c0-1.1-.9-2-2-2zM4 16V5h16v11a1 1 0 01-1 1h-2v-3H7v3H5a1 1 0 01-1-1zm4 3v-3h8v3H8zm1-7h2v2H9v-2zm4 0h2v2h-2v-2z"/>
+        </svg>`,
+
+        support: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1C6.48 1 2 5.48 2 11v5c0 .55.45 1 1 1h3v-6H4v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-2v6h3c.55 0 1-.45 1-1v-5c0-5.52-4.48-10-10-10z"/>
+        </svg>`,
+
+        star: `<svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
         </svg>`
     };
 
@@ -810,6 +834,7 @@
         const greetingDelay = Number.isFinite(parsedDelay) && parsedDelay >= 0 ? parsedDelay : 30;
         const displayName = (element.dataset.displayName || title || 'Symplissime AI').trim();
         const profilePicture = isValidUrl(element.dataset.profilePicture) ? element.dataset.profilePicture : '';
+        const bubbleIcon = (element.dataset.bubbleIcon || '').trim();
         const bubblePosition = ['left', 'right'].includes(element.dataset.bubblePosition) ? element.dataset.bubblePosition : 'right';
         const ownerEmail = isValidEmail(element.dataset.ownerEmail) ? element.dataset.ownerEmail : '';
         const footerText = (element.dataset.footerText || '').trim();
@@ -834,7 +859,7 @@
             greetingDelay,
             displayName,
             profilePicture,
-            bubbleIcon: element.dataset.bubbleIcon !== 'false',
+            bubbleIcon,
             bubblePosition,
             sendHistoryEmail: element.dataset.sendHistoryEmail === 'true',
             ownerEmail,
@@ -1020,10 +1045,11 @@
 
             const texts = I18N[this.config.language] || I18N.fr;
             const placeholder = texts.placeholder;
+            const fabIcon = ICONS[this.config.bubbleIcon] || '';
 
             this.element.innerHTML = `
                 <button class="symplissime-fab" type="button" aria-label="${texts.open}" aria-describedby="symplissime-fab-desc" aria-haspopup="dialog" aria-expanded="false">
-                    <div class="symplissime-fab-icon">${ICONS.chat}</div>
+                    <div class="symplissime-fab-icon">${fabIcon}</div>
                     <div class="symplissime-fab-badge"></div>
                 </button>
                 <div id="symplissime-fab-desc" class="symplissime-sr-only">${texts.openDescription}</div>
@@ -1083,7 +1109,7 @@
                 this.avatar.textContent = this.config.displayName.charAt(0).toUpperCase();
             }
 
-            if (!this.config.bubbleIcon) {
+            if (this.config.bubbleIcon === '') {
                 const iconEl = this.element.querySelector('.symplissime-fab-icon');
                 if (iconEl) iconEl.style.display = 'none';
             }
@@ -1224,7 +1250,7 @@
                         this.widget.classList.remove('open', 'minimized');
                         this.fab.classList.remove('closing');
                         this.fab.setAttribute('aria-expanded', 'false');
-                        this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+                        this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS[this.config.bubbleIcon] || '';
                         if (this.config.sendHistoryEmail && this.config.ownerEmail) {
                             this.sendHistoryEmail();
                         }
@@ -1248,7 +1274,7 @@
                 this.widget.classList.remove('open', 'minimized');
                 this.fab.classList.remove('closing');
                 this.fab.setAttribute('aria-expanded', 'false');
-                this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS.chat;
+                this.fab.querySelector('.symplissime-fab-icon').innerHTML = ICONS[this.config.bubbleIcon] || '';
             }
         }
 
