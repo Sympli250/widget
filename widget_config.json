@@ -18,7 +18,7 @@
   "general": {
     "display_name": "Symplissime AI",
     "profile_picture": "",
-    "bubble_icon": true,
+    "bubble_icon": "default_icon",
     "bubble_position": "right",
     "send_history_email": false,
     "owner_email": "",

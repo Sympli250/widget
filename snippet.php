@@ -16,7 +16,7 @@ function renderSnippet(array $config): string {
     $font = htmlspecialchars($config['attributes']['font_family'], ENT_QUOTES);
     $displayName = htmlspecialchars($config['general']['display_name'], ENT_QUOTES);
     $profilePicture = htmlspecialchars($config['general']['profile_picture'], ENT_QUOTES);
-    $bubbleIcon = $config['general']['bubble_icon'] ? 'true' : 'false';
+    $bubbleIcon = htmlspecialchars($config['general']['bubble_icon'], ENT_QUOTES);
     $bubblePosition = htmlspecialchars($config['general']['bubble_position'], ENT_QUOTES);
     $sendHistoryEmail = $config['general']['send_history_email'] ? 'true' : 'false';
     $ownerEmail = htmlspecialchars($config['general']['owner_email'], ENT_QUOTES);

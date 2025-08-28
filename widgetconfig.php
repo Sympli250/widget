@@ -23,7 +23,7 @@ $defaultConfig = [
     'general' => [
         'display_name' => 'Symplissime AI',
         'profile_picture' => '',
-        'bubble_icon' => true,
+        'bubble_icon' => 'default_icon',
         'bubble_position' => 'right',
         'send_history_email' => false,
         'owner_email' => '',
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['greetings']['display_delay'] = isset($_POST['display_delay']) ? (int)$_POST['display_delay'] : $defaultConfig['greetings']['display_delay'];
     $config['general']['display_name'] = trim(preg_replace('/\s+/', ' ', $_POST['display_name'] ?? $defaultConfig['general']['display_name']));
     $config['general']['profile_picture'] = $_POST['profile_picture'] ?? '';
-    $config['general']['bubble_icon'] = isset($_POST['bubble_icon']);
+    $config['general']['bubble_icon'] = $_POST['bubble_icon'] ?? 'default_icon';
     $config['general']['bubble_position'] = $_POST['bubble_position'] ?? 'right';
     $config['general']['send_history_email'] = isset($_POST['send_history_email']);
     $config['general']['owner_email'] = $_POST['owner_email'] ?? '';
@@ -244,7 +244,16 @@ $snippet = renderSnippet($config);
             <button type="button" id="remove_profile">Retirer</button>
         </label><br><br>
         <label>Bubble Icon:
-            <input type="checkbox" name="bubble_icon" <?php echo $config['general']['bubble_icon'] ? 'checked' : ''; ?>>
+            <select name="bubble_icon" id="bubble_icon">
+                <?php
+                $icons = ['default_icon', 'message', 'question', 'robot', 'support', 'star'];
+                foreach ($icons as $icon) {
+                    $selected = $config['general']['bubble_icon'] === $icon ? 'selected' : '';
+                    $label = ucwords(str_replace('_', ' ', $icon));
+                    echo "<option value=\"$icon\" $selected>$label</option>";
+                }
+                ?>
+            </select>
         </label><br><br>
         <label>Bubble Position:
             <select name="bubble_position">
@@ -423,7 +432,7 @@ $snippet = renderSnippet($config);
         widget.dataset.font = data.get("font_family");
         widget.dataset.displayName = data.get("display_name");
         widget.dataset.profilePicture = data.get("profile_picture");
-        widget.dataset.bubbleIcon = data.get("bubble_icon") ? "true" : "false";
+        widget.dataset.bubbleIcon = data.get("bubble_icon");
         widget.dataset.bubblePosition = data.get("bubble_position");
         widget.dataset.sendHistoryEmail = data.get("send_history_email") ? "true" : "false";
         widget.dataset.ownerEmail = data.get("owner_email");
