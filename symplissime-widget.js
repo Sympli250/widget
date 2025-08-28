@@ -921,23 +921,16 @@
         }
     }
 
-    class WidgetUI {
-        constructor(element, config, api) {
-            this.element = element;
-            this.config = config;
-            this.api = api;
-            this.theme = this.config.theme || 'symplissime';
-
+    class WidgetState {
+        constructor(config) {
             this.isOpen = false;
             this.isMinimized = false;
             this.isProcessing = false;
-            this.state = 'closed';
             this.stateMachine = new StateMachine('closed', {
                 closed: ['open'],
                 open: ['closed', 'minimized'],
                 minimized: ['open', 'closed']
             });
-            this.stateTimeout = null;
             try {
                 this.sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
                 if (!this.sessionId) {
@@ -949,6 +942,37 @@
             }
             this.unreadCount = 0;
             this.history = [];
+        }
+
+        transition(target, fn) {
+            const ok = this.stateMachine.transition(target, fn);
+            if (ok) {
+                this.isOpen = target !== 'closed';
+                this.isMinimized = target === 'minimized';
+            }
+            return ok;
+        }
+
+        force(target) {
+            this.stateMachine.force(target);
+            this.isOpen = target !== 'closed';
+            this.isMinimized = target === 'minimized';
+        }
+
+        get state() {
+            return this.stateMachine.state;
+        }
+    }
+
+    class WidgetRenderer {
+        constructor(element, config, state, api) {
+            this.element = element;
+            this.config = config;
+            this.state = state;
+            this.api = api;
+            this.theme = this.config.theme || 'symplissime';
+
+            this.stateTimeout = null;
             this.listeners = [];
 
             this.init();
@@ -1155,7 +1179,7 @@
             addKeyboard(closeBtn, closeClick);
 
             const escHandler = (e) => {
-                if (e.key === 'Escape' && this.isOpen) {
+                if (e.key === 'Escape' && this.state.isOpen) {
                     this.closeWidget();
                 }
             };
@@ -1196,7 +1220,7 @@
         }
         
         toggleWidget() {
-            if (this.isOpen) {
+            if (this.state.isOpen) {
                 this.closeWidget();
             } else {
                 this.openWidget();
@@ -1207,15 +1231,11 @@
             clearTimeout(this.stateTimeout);
             this.stateTimeout = setTimeout(() => this.forceState('closed'), 3000);
 
-            const transitioned = this.stateMachine.transition(newState, () => {
-                this.state = newState;
-                this.isOpen = newState !== 'closed';
-                this.isMinimized = newState === 'minimized';
-
+            const transitioned = this.state.transition(newState, () => {
                 switch (newState) {
                     case 'open':
                         this.fab.setAttribute('aria-expanded', 'true');
-                        this.unreadCount = 0;
+                        this.state.unreadCount = 0;
                         this.updateBadge();
                         this.widget.classList.add('open');
                         this.widget.classList.remove('minimized');
@@ -1243,7 +1263,7 @@
                         this.widget.classList.add('open');
                         this.widget.classList.add('minimized');
                         setTimeout(() => this.input.focus(), 100);
-                        this.unreadCount = 0;
+                        this.state.unreadCount = 0;
                         this.updateBadge();
                         break;
                 }
@@ -1253,10 +1273,7 @@
         }
 
         forceState(newState) {
-            this.stateMachine.force(newState);
-            this.state = newState;
-            this.isOpen = newState !== 'closed';
-            this.isMinimized = newState === 'minimized';
+            this.state.force(newState);
             if (newState === 'closed') {
                 this.widget.classList.remove('open', 'minimized');
                 this.fab.classList.remove('closing');
@@ -1274,14 +1291,14 @@
         }
 
         toggleMinimize() {
-            if (!this.isOpen) return;
-            this.changeState(this.isMinimized ? 'open' : 'minimized');
+            if (!this.state.isOpen) return;
+            this.changeState(this.state.isMinimized ? 'open' : 'minimized');
         }
 
         updateBadge() {
             if (!this.badge) return;
-            if (this.unreadCount > 0) {
-                this.badge.textContent = this.unreadCount;
+            if (this.state.unreadCount > 0) {
+                this.badge.textContent = this.state.unreadCount;
                 this.badge.style.display = 'flex';
             } else {
                 this.badge.textContent = '';
@@ -1309,13 +1326,13 @@
             this.messages.appendChild(messageEl);
             this.scrollToBottom();
 
-            if (!isUser && !isError && (!this.isOpen || this.isMinimized)) {
-                this.unreadCount++;
+            if (!isUser && !isError && (!this.state.isOpen || this.state.isMinimized)) {
+                this.state.unreadCount++;
                 this.updateBadge();
             }
 
             const now = new Date();
-            this.history.push({
+            this.state.history.push({
                 from: isUser ? 'user' : 'assistant',
                 message: isUser ? messageEl.textContent : messageEl.innerHTML.replace(/<br>/g, '\n'),
                 timestamp: now.toISOString()
@@ -1327,9 +1344,9 @@
                 email: this.config.ownerEmail,
                 displayName: this.config.displayName,
                 timeZone: this.config.timeZone,
-                session: this.sessionId,
+                session: this.state.sessionId,
                 url: window.location.href,
-                messages: this.history
+                messages: this.state.history
             };
             fetchWithFallback(this.config.apiEndpoint, {
                 method: 'POST',
@@ -1412,7 +1429,7 @@
         
         async sendMessage() {
             const message = this.input.value.trim();
-            if (!message || this.isProcessing) return;
+            if (!message || this.state.isProcessing) return;
             
             this.addMessage(message, true);
             this.input.value = '';
@@ -1421,11 +1438,11 @@
             this.showTyping();
             
             try {
-                const data = await this.api.chat(message, this.sessionId, this.config.workspace);
+                const data = await this.api.chat(message, this.state.sessionId, this.config.workspace);
                 if (data.sessionId) {
-                    this.sessionId = data.sessionId;
+                    this.state.sessionId = data.sessionId;
                     try {
-                        localStorage.setItem(SESSION_STORAGE_KEY, this.sessionId);
+                        localStorage.setItem(SESSION_STORAGE_KEY, this.state.sessionId);
                     } catch (e) { /* ignore */ }
                 }
                 this.hideTyping();
@@ -1448,7 +1465,7 @@
         }
         
         setProcessing(processing) {
-            this.isProcessing = processing;
+            this.state.isProcessing = processing;
             this.input.disabled = processing;
             this.sendBtn.disabled = processing;
             this.sendBtn.classList.toggle('sending', processing);
@@ -1515,12 +1532,13 @@
         constructor(element) {
             const config = getConfig(element);
             const api = new WidgetAPI(config.apiEndpoint);
-            this.ui = new WidgetUI(element, config, api);
+            const state = new WidgetState(config);
+            this.renderer = new WidgetRenderer(element, config, state, api);
         }
 
         destroy() {
-            this.ui.destroy();
-            widgetInstances.delete(this.ui.element);
+            this.renderer.destroy();
+            widgetInstances.delete(this.renderer.element);
         }
     }
 
