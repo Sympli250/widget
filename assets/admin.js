@@ -1,5 +1,5 @@
-    (function() {
-        const THEMES = <?php echo json_encode($themes, JSON_UNESCAPED_UNICODE); ?>;
+    (async function() {
+        const THEMES = await fetch('widget-themes.json').then(r => r.json());
         window.WidgetConfig = { getThemes: () => THEMES };
         const tabs = document.querySelectorAll('.tablink');
     const contents = document.querySelectorAll('.tabcontent');
